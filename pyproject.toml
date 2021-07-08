@@ -16,6 +16,7 @@ django-create-react-app = "^0.8.4"
 psycopg2 = "^2.9.1"
 python-decouple = "^3.4"
 gunicorn = "^20.1.0"
+requests = "^2.25.1"
 
 [tool.poetry.dev-dependencies]
 

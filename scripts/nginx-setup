@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 
+import requests
 from subprocess import run
 from db_name import STATICFILES_DIRS, STATIC_URL, APP_NAME
+
+resp = requests.get('https://api.ipify.org?format=json')
+ip = resp.json()['ip']
 
 server_conf = f'''
 
 server {{
     listen 80;
-    server_name server_domain_or_IP;
+    server_name {ip};
 
     location = /favicon.ico {{  access_log off; log_not_found off;  }}
     location {STATIC_URL} {{
