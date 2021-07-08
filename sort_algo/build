@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cargo b --release
+cp target/release/libreddit_sort.so ../

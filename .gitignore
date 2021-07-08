@@ -1,0 +1,14 @@
+.env
+*.pyc
+
+# api
+/api/migrations
+
+# frontend
+/frontend/node_modules
+/frontend/build
+/frontend/old
+
+# sort_algo
+/sort_algo/target
+/sort_algo/debug

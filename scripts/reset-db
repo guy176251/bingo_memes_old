@@ -1,0 +1,33 @@
+#!/bin/bash
+
+getinput() {
+    local input
+    read -p "Type \"$1\" to continue: " input
+    printf "$input"
+}
+
+confirm() {
+    printf "$1"
+    local input="$(getinput "$2")"
+
+    while [ "$input" != "$2" ]; do
+        input="$(getinput "$2")"
+    done
+}
+
+confirm "You are about to wipe the entire database and reset it. " "this is fine"
+
+rm db.sqlite3
+rm -r api/migrations
+
+db_name=$(scripts/db_name.py)
+sql_script="
+
+DROP DATABASE $db_name;
+CREATE DATABASE $db_name;
+GRANT ALL PRIVILEGES ON DATABASE $db_name TO $USER;
+
+"
+echo "$sql_script" | sudo -u postgres psql --file -
+
+scripts/fill-db
