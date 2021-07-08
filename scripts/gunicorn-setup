@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+
+# https://www.digitalocean.com/community/tutorials/how-to-set-up-django-with-postgres-nginx-and-gunicorn-on-ubuntu-20-04
+
+import os
+from pathlib import Path
+from db_name import WSGI_APPLICATION
+from subprocess import run
+
+
+def main():
+    virtualenv_path = os.environ.get('VIRTUAL_ENV')
+
+    if not virtualenv_path:
+        print('Need to run script in virtualenv.')
+        return
+   
+    usr = os.getlogin()
+    proj_dir = Path(__file__).absolute().parent.parent
+    gunicorn_bin = Path(virtualenv_path) / 'bin' / 'gunicorn'
+
+    socket_file = '''
+
+[Unit]
+Description=gunicorn socket
+
+[Socket]
+ListenStream=/run/gunicorn.sock
+
+[Install]
+WantedBy=sockets.target
+
+'''
+
+    service_file = f'''
+
+[Unit]
+Description=gunicorn daemon
+Requires=gunicorn.socket
+After=network.target
+
+[Service]
+User={usr}
+Group=www-data
+WorkingDirectory={proj_dir}
+ExecStart={gunicorn_bin} \\
+          --access-logfile - \\
+          --workers 3 \\
+          --bind unix:/run/gunicorn.sock \\
+          {WSGI_APPLICATION.replace('.application', ':application')}
+
+[Install]
+WantedBy=multi-user.target
+
+'''
+    print(service_file)
+
+    for name, contents in {'gunicorn.socket': socket_file,
+                           'gunicorn.service': service_file}.items():
+
+        with open(f'/etc/systemd/system/{name}', 'w') as f:
+            f.write(contents)
+
+    for cmd in ['systemctl start gunicorn.socket',
+                'systemctl enable gunicorn.socket']:
+
+        run(cmd, shell=True)
+
+
+if __name__ == '__main__':
+    main()
