@@ -53,16 +53,17 @@ ExecStart={gunicorn_bin} \\
 WantedBy=multi-user.target
 
 '''
-    print(service_file)
 
     for name, contents in {'gunicorn.socket': socket_file,
                            'gunicorn.service': service_file}.items():
 
-        with open(f'/etc/systemd/system/{name}', 'w') as f:
+        with open(name, 'w') as f:
             f.write(contents)
 
-    for cmd in ['systemctl start gunicorn.socket',
-                'systemctl enable gunicorn.socket']:
+    run('sudo mv gunicorn.* /etc/systemd/system/', shell=True)
+    
+    for cmd in ['sudo systemctl start gunicorn.socket',
+                'sudo systemctl enable gunicorn.socket']:
 
         run(cmd, shell=True)
 
