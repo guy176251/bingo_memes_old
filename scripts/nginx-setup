@@ -33,6 +33,7 @@ with open(conf_filename, 'w') as f:
 
 run(f'sudo rm /etc/nginx/sites-available/default', shell=True)
 run(f'sudo mv {conf_filename} /etc/nginx/sites-available/', shell=True)
+run(f'sudo ln -s /etc/nginx/sites-available/{conf_filename} /etc/nginx/sites-enabled', shell=True)
 result = run('sudo nginx -t', shell=True, capture_output=True)
 
 if result.stderr:
