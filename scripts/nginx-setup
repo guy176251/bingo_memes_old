@@ -31,6 +31,7 @@ conf_filename = f'{APP_NAME}.conf'
 with open(conf_filename, 'w') as f:
     f.write(server_conf)
 
+run(f'sudo rm /etc/nginx/sites-available/default', shell=True)
 run(f'sudo mv {conf_filename} /etc/nginx/sites-available/', shell=True)
 result = run('sudo nginx -t', shell=True, capture_output=True)
 
