@@ -15,7 +15,7 @@ server {{
 
     location = /favicon.ico {{  access_log off; log_not_found off;  }}
     location {STATIC_URL} {{
-        root {STATICFILES_DIRS[0]};
+        root {STATICFILES_DIRS[0].parent};
     }}
 
     location / {{
@@ -38,5 +38,5 @@ result = run('sudo nginx -t', shell=True, capture_output=True)
 
 if result.stderr:
     print(result.stderr)
-else:
-    run('sudo systemctl restart nginx', shell=True)
+
+run('sudo systemctl restart nginx', shell=True)
