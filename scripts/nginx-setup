@@ -22,10 +22,12 @@ server {{
 
 '''
 
-with open(APP_NAME, 'w') as f:
+conf_filename = f'{APP_NAME}.conf'
+
+with open(conf_filename, 'w') as f:
     f.write(server_conf)
 
-run(f'sudo mv {APP_NAME} /etc/nginx/sites-available/', shell=True)
+run(f'sudo mv {conf_filename} /etc/nginx/sites-available/', shell=True)
 result = run('sudo nginx -t', shell=True, capture_output=True)
 
 if result.stderr:
