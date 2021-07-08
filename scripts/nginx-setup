@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+
+from subprocess import run
+from db_name import STATICFILES_DIRS, STATIC_URL, APP_NAME
+
+server_conf = f'''
+
+server {{
+    listen 80;
+    server_name server_domain_or_IP;
+
+    location = /favicon.ico {{  access_log off; log_not_found off;  }}
+    location {STATIC_URL} {{
+        root {STATICFILES_DIRS[0]};
+    }}
+
+    location / {{
+        include proxy_params;
+        proxy_pass http://unix:/run/gunicorn.sock;
+    }}
+}}
+
+'''
+
+with open(APP_NAME, 'w') as f:
+    f.write(server_conf)
+
+run(f'sudo mv {APP_NAME} /etc/nginx/sites-available/', shell=True)
+result = run('sudo nginx -t', shell=True, capture_output=True)
+
+if result.stderr:
+    print(result.stderr)
+else:
+    run('sudo systemctl restart nginx', shell=True)
