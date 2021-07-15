@@ -12,6 +12,7 @@ interface ApiRenderProps {
     apiCall: () => Promise<ApiResponse>;
     component: React.FunctionComponent<ComponentProps>;
     loadingMessage?: string;
+    key: string;
 }
 
 

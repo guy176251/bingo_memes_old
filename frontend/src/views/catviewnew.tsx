@@ -1,25 +1,33 @@
 import { Link, useParams } from 'react-router-dom';
+import { Helmet } from "react-helmet";
 
-import ApiRender from '../api/render';
 import api from '../api/backend';
 import { Category } from '../types';
-import CardList from '../components/cardlist';
 import { InfoHeader, parseDate } from '../components/snippets';
+import CardListView from '../components/cardlistview';
 
 const CategoryView = () => {
     const { categoryName }: { categoryName: string } = useParams();
 
     return (
-        <ApiRender
+        <CardListView
             apiCall={() => api.getCategory(categoryName)}
-            component={CategoryHeader}
-            key={categoryName}
+            cardQuery={{ category: categoryName }}
+            header={CategoryHeader}
+            key={`${Date.now()}`}
         />
     );
-}
+};
 
-const CategoryHeader = ({ data }: { data: Category }) => (
+const CategoryHeader = ({ data }: { data: Category }) => 
     <>
+        <Helmet>
+            <title>{data.name}</title>
+            <meta
+              name="description"
+                content={`Category: ${data.name}`}
+            />
+        </Helmet>
         <InfoHeader
             subject={`category: ${data.name}`}
             info={[
@@ -27,11 +35,6 @@ const CategoryHeader = ({ data }: { data: Category }) => (
                 `created at ${parseDate(data.created_at)}`,
             ]}
         />
-        <CardList
-            query={{ category: data.name }}
-            key={data.name}
-        />
-    </>
-);
+    </>;
 
 export default CategoryView;

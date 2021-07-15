@@ -12,10 +12,10 @@ import Dropdown from 'react-bootstrap/Dropdown';
 import { Link, BrowserRouter as Router, Switch, Route, useHistory, useParams } from 'react-router-dom';
 
 import { FontAwesomeIcon as FaIcon } from '@fortawesome/react-fontawesome';
-import { faPen, faCog, faUserCircle, faTimes, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faPencilAlt, faTh, faPen, faCog, faUserCircle, faTimes, faSearch } from '@fortawesome/free-solid-svg-icons';
 
 import HomeView from './views/homeview';
-import CategoryView from './views/categoryview';
+import CategoryView from './views/catviewnew';
 import UserView from './views/userview';
 import CardView from './views/cardview';
 import LoginView from './views/loginview';
@@ -24,7 +24,7 @@ import SearchView from './views/searchview';
 import CardCreateView from './views/cardcreateview';
 import api from './api/backend';
 import { UserAuthContext } from './context';
-import { User, UserState, Category } from './types';
+import { User, UserState, BingoCard } from './types';
 import SearchBar from './components/searchbar';
 
 import './solarized.css';
@@ -214,12 +214,23 @@ const TopNavBar = () => {
     const searchbar = 
         <SearchBar
             label='Search'
-            apiCall={(query) => api.getTopThreeCategories(query)}
-            resultMapper={(result: Category) => 
-                <Dropdown.Item as={Link} to={`/categories/${result.name}/`}>
-                    Go to {result.name}
-                </Dropdown.Item>
-            }
+            apiCall={(query) => api.getTopThreeCards(query)}
+            resultMapper={(result: BingoCard[], query: string) => (
+                result.length > 0
+                    ?
+                        [...result.map(card => 
+                            <Dropdown.Item as={Link} to={`/cards/${card.id}/`}>
+                                <FaIcon icon={faTh}/> <FaIcon icon={faPencilAlt}/> {card.name}
+                            </Dropdown.Item>),
+
+                        <Dropdown.Item as={Link} to={`/search/?q=${query}`}>
+                            <FaIcon icon={faSearch}/> Search bingo cards for "{query}"
+                        </Dropdown.Item>]
+                    :  
+                        [<Dropdown.Item className='slight-bg' disabled>
+                            No results found
+                        </Dropdown.Item>]
+            )}
         />;
     
     return (

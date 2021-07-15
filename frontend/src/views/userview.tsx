@@ -1,4 +1,5 @@
 import { useParams } from 'react-router-dom';
+import { Helmet } from "react-helmet";
 
 //import { UserAuthContext } from '../context';
 import { User } from '../types';
@@ -24,6 +25,9 @@ const UserView = () => {
 
 const UserHeader = ({ data }: { data: User }) => (
     <>
+        <Helmet>
+            <title>Profile for {data.name}</title>
+        </Helmet>
         <InfoHeader
             subject={`user: ${data.name}`}
             info={[
@@ -31,7 +35,7 @@ const UserHeader = ({ data }: { data: User }) => (
                 `created at ${parseDate(data.created_at)}`,
             ]}
         />
-        <CardList query={{ user: data.id }}/>
+        <CardList query={{ user: data.id }} key={`${data.id}`}/>
     </>
 );
 

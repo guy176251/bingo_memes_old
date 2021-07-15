@@ -19,7 +19,7 @@ const SearchView = () => {
                     Search results for "{searchQuery}"
                 </h3>
             </Header>
-            <CardList query={cardQuery}/>
+            <CardList query={cardQuery} key={searchQuery}/>
         </>
     );
 }

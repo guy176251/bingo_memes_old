@@ -334,6 +334,7 @@ const CardView = () => {
     const { cardId }: CardIdParam = useParams();
     return (
         <ApiRender
+            key={cardId}
             apiCall={() => api.getCard(cardId)}
             loadingMessage={`Loading bingo card ${cardId}`}
             component={({ data }) => 

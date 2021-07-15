@@ -107,7 +107,7 @@ const CategorySearchBar = ({ card }: { card?: BingoCard }) => {
         | { type: 'query',      payload: string }
         | { type: 'dropdown',   payload: boolean }
         | { type: 'menuSelect', payload: { query: string; errors: Array<string> } }
-        | { type: 'category',   payload: SearchResults<Category> }
+        | { type: 'category',   payload: Category[] }
         | { type: 'load',       payload: boolean };
 
     type State = {
@@ -116,7 +116,7 @@ const CategorySearchBar = ({ card }: { card?: BingoCard }) => {
         showDropdown: boolean;
         loading: boolean;
         disabled: boolean;
-        categories: SearchResults<Category>;
+        categories: Category[];
     };
 
     // has to be defined before the reducer in order to work for some reason
@@ -181,7 +181,7 @@ const CategorySearchBar = ({ card }: { card?: BingoCard }) => {
         loading: false,
         disabled: Boolean(categoryName.length > 0),
         errors: [],
-        categories: { count: 0, page_size: 0, results: [] },
+        categories: [],
     };
 
     const [{ disabled, errors, query, showDropdown, loading, categories }, dispatch] = useReducer(stateReducer, initState);
@@ -287,9 +287,9 @@ const CategorySearchBar = ({ card }: { card?: BingoCard }) => {
             </Dropdown.Item>
             <Dropdown.Divider className='border-slight-top'/>
             {
-                categories.count > 0
+                categories.length > 0
                     ?
-                        categories.results.map(category => (
+                        categories.map(category => (
                             <Dropdown.Item className='slight-bg' eventKey={category.name}>
                                 {category.name}
                             </Dropdown.Item>
@@ -536,6 +536,7 @@ const CardCreateView = () => {
                 <ApiRender
                     apiCall={() => api.getCard(`${cardId}`)}
                     component={({ data }) => <CardCreateEditLayout card={data}/>}
+                    key={cardId}
                 />
             :
                 <CardCreateEditLayout/>

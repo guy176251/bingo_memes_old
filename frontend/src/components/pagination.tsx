@@ -58,10 +58,10 @@ interface PaginationProps {
     itemCount: number;
     pageSize: number;
     label: string;
-    header?: boolean;
+    top?: boolean;
 }
 
-const Pagination = ({ pageSize, itemCount, label, header = false }: PaginationProps) => {
+const Pagination = ({ pageSize, itemCount, label, top = false }: PaginationProps) => {
     const buttonShape = 'w-100 rounded p-2 text-center';
     const pageCount = Math.ceil(itemCount / pageSize);
 
@@ -172,7 +172,7 @@ const Pagination = ({ pageSize, itemCount, label, header = false }: PaginationPr
         <div className="row">
 
             {
-                header &&
+                top &&
                     <>
                         <div className="col-12 d-lg-none">
                             <div className="row">
@@ -204,7 +204,7 @@ const Pagination = ({ pageSize, itemCount, label, header = false }: PaginationPr
             
             <div className="d-none d-lg-block col-3">
                 {
-                    header &&                 
+                    top &&                 
                         <div className="row">
                             <div className="col-6 p-0">
                                 <div className='pl-2 pr-1'>

@@ -2,7 +2,7 @@ import Cookies from 'universal-cookie';
 import { Location } from 'history';
 
 import { toApiQuery } from '../components/pagination';
-import { SearchResults, Category } from '../types';
+import { User, BingoCard, Category } from '../types';
 import debugLog from '../debug';
 
 // here for pasting purposes
@@ -67,9 +67,14 @@ interface UserData {
     email: string;
 }
 
+interface LoginData {
+    user?: User;
+    valid: boolean;
+}
+
 const api = {
     login(credentials: object) {
-        return apiGetPostPut('/login/', credentials);
+        return apiGetPostPut<LoginData>('/login/', credentials);
     },
     logout() {
         return apiGetPostPut('/logout/');
@@ -112,8 +117,11 @@ const api = {
     getCardList(location: Location, query: object = {}) {
         return apiGetPostPut(`/cards/?${toApiQuery(location, query)}`);
     },
+    getTopThreeCards(name: string) {
+        return apiGetPostPut<BingoCard[]>(`/bar/cards/?search=${name}`);
+    },
     getTopThreeCategories(name: string) {
-        return apiGetPostPut<SearchResults<Category>>(`/categories?search=${name}`);
+        return apiGetPostPut<Category[]>(`/bar/categories/?search=${name}`);
     },
 };
 

@@ -3,7 +3,6 @@ import Dropdown from 'react-bootstrap/Dropdown';
 import DropdownItem from 'react-bootstrap/DropdownItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { SearchResults } from '../types';
 import { ApiResponse } from '../api/backend';
 import debugLog from '../debug';
 
@@ -15,17 +14,18 @@ const DropdownContainer = forwardRef(({ children }: any, ref: any) => (
 
 interface SearchBarProps {
     label: string;
-    apiCall: (query: string) => Promise<ApiResponse>;
-    resultMapper: (result: any) => ReactElement<DropdownItem>;
+    apiCall: (query: string) => Promise<ApiResponse<any[]>>;
+    //resultMapper: (result: any) => ReactElement<DropdownItem>;
+    resultMapper: (result: any[], query: string) => ReactElement<DropdownItem>[];
 }
 
 const SearchBar = ({ label, apiCall, resultMapper }: SearchBarProps) => {
-    // 1. State Handling
-    // 2. Sub-Elements
-    // 3. Main Element
+    // 1. StateHandling
+    // 2. SubElements
+    // 3. MainElement
 
     // ============================================================================
-    // ========================= 1. State Handling ================================
+    // ========================= 1. StateHandling ================================
     // ============================================================================
     
     /*
@@ -40,7 +40,7 @@ const SearchBar = ({ label, apiCall, resultMapper }: SearchBarProps) => {
         | { type: 'query',      payload: string }
         | { type: 'dropdown',   payload: boolean }
         | { type: 'menuSelect', payload: { query: string } }
-        | { type: 'results',    payload: SearchResults<any> }
+        | { type: 'results',    payload: any[] }
         | { type: 'load',       payload: boolean };
 
     type State = {
@@ -48,7 +48,7 @@ const SearchBar = ({ label, apiCall, resultMapper }: SearchBarProps) => {
         showDropdown: boolean;
         loading: boolean;
         disabled: boolean;
-        searchResults: SearchResults<any>;
+        searchResults: any[];
     };
 
     // has to be defined before the reducer in order to work for some reason
@@ -106,7 +106,7 @@ const SearchBar = ({ label, apiCall, resultMapper }: SearchBarProps) => {
         showDropdown: false,
         loading: false,
         disabled: false,
-        searchResults: { count: 0, page_size: 0, results: [] },
+        searchResults: [],
     };
 
     const [{ disabled, query, showDropdown, loading, searchResults }, dispatch] = useReducer(stateReducer, initState);
@@ -127,20 +127,8 @@ const SearchBar = ({ label, apiCall, resultMapper }: SearchBarProps) => {
         }
     }
 
-    const handleSelect = (eventKey: string | null) => {
-        switch (eventKey) {
-            case null:
-                break;
-            case 'QUERY!':
-                dispatch({ type: 'menuSelect', payload: { query } });
-                break;
-            default:
-                dispatch({ type: 'menuSelect', payload: { query: eventKey } });
-        }
-    }
-
     // ============================================================================
-    // ========================= 2. Sub-Elements ==================================
+    // ========================= 2. SubElements ==================================
     // ============================================================================
     
     const LoadingIndicator = () => <>{
@@ -169,15 +157,16 @@ const SearchBar = ({ label, apiCall, resultMapper }: SearchBarProps) => {
             </div>
     }</>;
 
+    /*
     const DropdownItems = () => (
         <>
             <Dropdown.Item className='slight-bg' disabled>
                 Select one
             </Dropdown.Item>
             <Dropdown.Divider className='border-slight-top'/>
-            {searchResults.count > 0
+            {searchResults.length > 0
                 ?
-                    searchResults.results.map(resultMapper)
+                    searchResults.map(resultMapper)
 
                 :  
                     <Dropdown.Item className='slight-bg' disabled>
@@ -185,6 +174,9 @@ const SearchBar = ({ label, apiCall, resultMapper }: SearchBarProps) => {
                     </Dropdown.Item>}
         </>
     );
+     */
+    
+    const DropdownItems = () => <>{resultMapper(searchResults, query)}</>;
     
     const SearchBarLabel = () =>
         <div className="input-group-prepend">
@@ -194,7 +186,7 @@ const SearchBar = ({ label, apiCall, resultMapper }: SearchBarProps) => {
         </div>;
     
     // ============================================================================
-    // ========================= 3. Main Element ==================================
+    // ========================= 3. MainElement ==================================
     // ============================================================================
     
     return (

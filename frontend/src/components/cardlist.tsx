@@ -10,15 +10,17 @@ import { Header } from '../components/snippets';
 
 interface CardListProps {
     query: object;
+    key: string;
 }
 
-const CardList = ({ query }: CardListProps) => {
+const CardList = ({ query, key }: CardListProps) => {
     let location = useLocation();
 
     return (
         <ApiRender
             apiCall={() => api.getCardList(location, query)}
             component={CardLayout}
+            key={key}
         />
     );
 }
@@ -37,7 +39,7 @@ const CardLayout = ({ data }: { data: CardResults }) => {
                 itemCount={data.count}
                 pageSize={data.page_size}
                 label='cards'
-                header={header}
+                top={header}
             />
         </div>;
 
