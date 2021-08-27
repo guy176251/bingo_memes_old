@@ -1,0 +1,18 @@
+discard static bingo card and reddit format, change to lobby-ish game format
+the way in which people consume bingo cards and the rate of their creation prob doesn't fit a forum post format
+bingo card tiles are no longer going to be static, instead they become a pool from which visitors are given a randomly generated card from said pool
+bingo completion results are tracked to see which tiles are the most popular, to see which "trope" of a subject is the most correct/true
+
+things that go towards anti-results spoofing:
+    1. weighing results from logged in users higher, and using some other metric to weigh users against another
+    2. session tracking to only count the first result
+    3. some sort of mild obfuscation to prevent spoofers from being able to reverse engineer system
+    4. prob not that serious anyway, spoofing results is pretty inconsequential since its contained to one card and to the existing tiles
+
+not sure how to format a home page in a way that's relevant
+bingo card meme templates are kind of big, so idk how to make them digestible
+possibly just show a random amount of tiles as a highlight and state that its random
+or just show the top N tiles for less work
+
+would also like to have card link embeds to show the entire bingo card
+but idk how to do that either with the current way the site is set up

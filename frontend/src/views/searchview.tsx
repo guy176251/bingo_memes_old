@@ -1,4 +1,5 @@
 import { useLocation } from 'react-router-dom';
+import { Helmet } from "react-helmet";
 
 import CardList from '../components/cardlist';
 import { Header } from '../components/snippets';
@@ -14,12 +15,15 @@ const SearchView = () => {
     debugLog({ SEARCHVIEW: 1, searchQuery });
     return (
         <>
+            <Helmet>
+                <title>Search</title>
+            </Helmet>
             <Header card>
                 <h3>
                     Search results for "{searchQuery}"
                 </h3>
             </Header>
-            <CardList query={cardQuery} key={searchQuery}/>
+            <CardList query={cardQuery} key={`${Date.now()}`}/>
         </>
     );
 }

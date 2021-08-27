@@ -17,7 +17,7 @@ confirm() {
 
 confirm "You are about to wipe the entire database and reset it. " "this is fine"
 
-rm db.sqlite3
+#rm db.sqlite3
 rm -r api/migrations
 
 db_name=$(scripts/db_name.py)

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# https://djangocentral.com/deploy-django-with-nginx-gunicorn-postgresql-and-lets-encrypt-ssl-on-ubuntu/
+
 import requests
 from subprocess import run
 from db_name import STATICFILES_DIRS, STATIC_URL, APP_NAME

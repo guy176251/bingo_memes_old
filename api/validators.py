@@ -1,12 +1,32 @@
 from rest_framework.serializers import ValidationError
 from django.contrib.auth.models import User
 import re
-from .models import BingoCard, BingoCardCategory
+from .models import BingoCard, BingoCardCategory, SiteUser, BingoTile
+
+
+def user_exists(ID):
+    if not SiteUser.objects.filter(id=ID).exists():
+        raise ValidationError('Invalid user id.')
+
+
+def category_name_exists(name):
+    if not BingoCardCategory.objects.filter(name__iexact=name).exists():
+        raise ValidationError('Invalid category id.')
+
+
+def category_id_exists(ID):
+    if not BingoCardCategory.objects.filter(id=ID).exists():
+        raise ValidationError('Invalid category id.')
 
 
 def card_exists(ID):
     if not BingoCard.objects.filter(id=ID).exists():
         raise ValidationError('Invalid card id.')
+
+
+def tile_exists(ID):
+    if not BingoTile.objects.filter(id=ID).exists():
+        raise ValidationError('Invalid bingo tile id.')
 
 
 def password_length(password):

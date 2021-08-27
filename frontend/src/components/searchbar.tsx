@@ -1,22 +1,18 @@
-import { ReactElement, useReducer, useRef, forwardRef } from 'react';
-import Dropdown from 'react-bootstrap/Dropdown';
-import DropdownItem from 'react-bootstrap/DropdownItem';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { ApiResponse } from '../api/backend';
-import debugLog from '../debug';
+import { ReactElement, useReducer, useRef, forwardRef } from "react";
+import Dropdown from "react-bootstrap/Dropdown";
+import DropdownItem from "react-bootstrap/DropdownItem";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTimes } from "@fortawesome/free-solid-svg-icons";
+import { ApiResponse } from "../api/backend";
+import debugLog from "../debug";
 
-const DropdownContainer = forwardRef(({ children }: any, ref: any) => (
-    <div ref={ref}>
-        {children}
-    </div>
-));
+const DropdownContainer = forwardRef(({ children }: any, ref: any) => <div ref={ref}>{children}</div>);
 
 interface SearchBarProps {
     label: string;
     apiCall: (query: string) => Promise<ApiResponse<any[]>>;
     //resultMapper: (result: any) => ReactElement<DropdownItem>;
-    resultMapper: (result: any[], query: string) => ReactElement<DropdownItem>[];
+    resultMapper: (result: any[], query: string) => ReactElement<any>[];
 }
 
 const SearchBar = ({ label, apiCall, resultMapper }: SearchBarProps) => {
@@ -27,7 +23,7 @@ const SearchBar = ({ label, apiCall, resultMapper }: SearchBarProps) => {
     // ============================================================================
     // ========================= 1. StateHandling ================================
     // ============================================================================
-    
+
     /*
      
     if query is blank, hide dropdown
@@ -36,12 +32,12 @@ const SearchBar = ({ label, apiCall, resultMapper }: SearchBarProps) => {
 
     */
 
-    type Action = 
-        | { type: 'query',      payload: string }
-        | { type: 'dropdown',   payload: boolean }
-        | { type: 'menuSelect', payload: { query: string } }
-        | { type: 'results',    payload: any[] }
-        | { type: 'load',       payload: boolean };
+    type Action =
+        | { type: "query"; payload: string }
+        | { type: "dropdown"; payload: boolean }
+        | { type: "menuSelect"; payload: { query: string } }
+        | { type: "results"; payload: any[] }
+        | { type: "load"; payload: boolean };
 
     type State = {
         query: string;
@@ -55,18 +51,18 @@ const SearchBar = ({ label, apiCall, resultMapper }: SearchBarProps) => {
     const checkIfInputStopped = () => {
         // hack that checks if input has stopped for at least 500 ms
         setTimeout(() => {
-            debugLog({ SEARCHBAR: 'input check', label, query, queryRef });
-            if (query && (query === queryRef.current)) {
-                debugLog('searching for searchResults...');
+            debugLog({ SEARCHBAR: "input check", label, query, queryRef });
+            if (query && query === queryRef.current) {
+                debugLog("searching for searchResults...");
                 getResults();
-            } 
+            }
         }, 500);
-    }
+    };
 
     const stateReducer = (state: State, action: Action): State => {
-        debugLog({ SEARCHBAR: 'reducer', label, state, action });
+        debugLog({ SEARCHBAR: "reducer", label, state, action });
         switch (action.type) {
-            case 'query':
+            case "query":
                 checkIfInputStopped();
                 return {
                     ...state,
@@ -74,25 +70,25 @@ const SearchBar = ({ label, apiCall, resultMapper }: SearchBarProps) => {
                     showDropdown: false,
                     disabled: state.disabled ? action.payload.length > 0 : false,
                 };
-            case 'dropdown':
+            case "dropdown":
                 return {
                     ...state,
                     showDropdown: action.payload,
                 };
-            case 'results':
+            case "results":
                 return {
                     ...state,
                     showDropdown: true,
                     loading: false,
                     searchResults: action.payload,
                 };
-            case 'menuSelect':
+            case "menuSelect":
                 return {
                     ...state,
                     disabled: Boolean(action.payload.query.length > 0),
                     query: action.payload.query,
                 };
-            case 'load':
+            case "load":
                 return {
                     ...state,
                     showDropdown: !action.payload,
@@ -102,7 +98,7 @@ const SearchBar = ({ label, apiCall, resultMapper }: SearchBarProps) => {
     };
 
     const initState: State = {
-        query: '',
+        query: "",
         showDropdown: false,
         loading: false,
         disabled: false,
@@ -114,48 +110,54 @@ const SearchBar = ({ label, apiCall, resultMapper }: SearchBarProps) => {
     const queryRef = useRef(query);
     queryRef.current = query;
 
-    debugLog({ SEARCHBAR: 'states', label, query, disabled });
-    
+    debugLog({ SEARCHBAR: "states", label, query, disabled });
+
     const getResults = async () => {
-        dispatch({ type: 'load', payload: true });
+        dispatch({ type: "load", payload: true });
         let { data, ok } = await apiCall(query);
         if (ok && data) {
             debugLog(data);
-            dispatch({ type: 'results', payload: data });
+            dispatch({ type: "results", payload: data });
         } else {
-            dispatch({ type: 'load', payload: false });
+            dispatch({ type: "load", payload: false });
         }
-    }
+    };
 
     // ============================================================================
     // ========================= 2. SubElements ==================================
     // ============================================================================
-    
-    const LoadingIndicator = () => <>{
-        loading &&
-            <div className="input-group-append">
-                <span className="input-group-text">
-                    <div className="pl-2">
-                        <div className="spinner-border spinner-border-sm" role="status">
-                            <span className="sr-only">Loading...</span>
-                        </div>
-                    </div>
-                </span>
-            </div>
-    }</>;
 
-    const ClearButton = () => <>{
-        !showQueryButton && query.length > 0 &&
-            <div
-                className="input-group-append"
-                style={{ cursor: 'pointer' }}
-                onClick={() => dispatch({ type: 'query', payload: '' })}
-            >
-                <span className="input-group-text clear">
-                    <FontAwesomeIcon icon={faTimes}/>
-                </span>
-            </div>
-    }</>;
+    const LoadingIndicator = () => (
+        <>
+            {loading && (
+                <div className="input-group-append">
+                    <span className="input-group-text">
+                        <div className="ps-2">
+                            <div className="spinner-border spinner-border-sm" role="status">
+                                <span className="sr-only">Loading...</span>
+                            </div>
+                        </div>
+                    </span>
+                </div>
+            )}
+        </>
+    );
+
+    const ClearButton = () => (
+        <>
+            {!showQueryButton && query.length > 0 && (
+                <div
+                    className="input-group-append"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => dispatch({ type: "query", payload: "" })}
+                >
+                    <span className="input-group-text clear">
+                        <FontAwesomeIcon icon={faTimes} />
+                    </span>
+                </div>
+            )}
+        </>
+    );
 
     /*
     const DropdownItems = () => (
@@ -175,46 +177,44 @@ const SearchBar = ({ label, apiCall, resultMapper }: SearchBarProps) => {
         </>
     );
      */
-    
+
     const DropdownItems = () => <>{resultMapper(searchResults, query)}</>;
-    
-    const SearchBarLabel = () =>
+
+    const SearchBarLabel = () => (
         <div className="input-group-prepend">
-            <span className='input-group-text'>
-                {label}
-            </span>
-        </div>;
-    
+            <span className="input-group-text">{label}</span>
+        </div>
+    );
+
     // ============================================================================
     // ========================= 3. MainElement ==================================
     // ============================================================================
-    
+
     return (
         <Dropdown
             show={showDropdown}
-            onToggle={() => dispatch({ type: 'dropdown', payload: !showDropdown })}
-            onSelect={() => dispatch({ type: 'query', payload: '' })}
+            onToggle={() => dispatch({ type: "dropdown", payload: !showDropdown })}
+            onSelect={() => dispatch({ type: "query", payload: "" })}
         >
             <div className="input-group slight-bg rounded">
-                <SearchBarLabel/>
+                <SearchBarLabel />
                 <input
                     disabled={showQueryButton}
                     type="text"
                     className="form-control"
-                    placeholder={showQueryButton ? '' : 'Search'}
-                    value={showQueryButton ? '' : query}
-                    onChange={e => dispatch({ type: 'query', payload: e.target.value })}
+                    placeholder={showQueryButton ? "" : "Search"}
+                    value={showQueryButton ? "" : query}
+                    onChange={(e) => dispatch({ type: "query", payload: e.target.value })}
                 />
-                <ClearButton/>
-                <LoadingIndicator/>
+                <ClearButton />
+                <LoadingIndicator />
             </div>
 
-            <Dropdown.Toggle as={DropdownContainer} id={`search-bar-${label}`}/>
-            <Dropdown.Menu className='w-100 slight-bg mt-1 px-2'>
-                <DropdownItems/>
+            <Dropdown.Toggle as={DropdownContainer} id={`search-bar-${label}`} />
+            <Dropdown.Menu className="w-100 slight-bg mt-1 px-2">
+                <DropdownItems />
             </Dropdown.Menu>
         </Dropdown>
-
     );
 };
 

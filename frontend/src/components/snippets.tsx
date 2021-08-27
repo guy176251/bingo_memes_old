@@ -1,4 +1,13 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from "react";
+import { Link, useHistory } from "react-router-dom";
+import Row from "react-bootstrap/Row";
+import Col from "react-bootstrap/Col";
+import Button from "react-bootstrap/Button";
+import { FontAwesomeIcon as FaIcon } from "@fortawesome/react-fontawesome";
+import { faHeart } from "@fortawesome/free-solid-svg-icons";
+import api, { ApiResponse } from "../api/backend";
+import { useAuth } from "../auth";
+import { Category } from "../types";
 
 interface HeaderProps {
     card?: boolean;
@@ -9,19 +18,13 @@ export const Header = ({ card, children }: HeaderProps) => (
     <div className="row">
         <div className="w-100">
             <div className="row">
-                <div className="col-2 d-none d-lg-block"/>
+                <div className="col-2 d-none d-lg-block" />
                 <div className="col-12 col-lg-8">
                     <div>
-                        {card
-                            ?
-                                <div className="py-4 text-center rounded sdark-fg m-2">
-                                    {children}
-                                </div>
-                            :
-                                children}
+                        {card ? <div className="py-4 text-center rounded sdark-fg m-2">{children}</div> : children}
                     </div>
                 </div>
-                <div className="col-2 d-none d-lg-block"/>
+                <div className="col-2 d-none d-lg-block" />
             </div>
         </div>
     </div>
@@ -41,36 +44,29 @@ const infoPadding = (index: number, max: number) => {
         default:
             return `py-${gridPadding}`;
     }
-}
+};
 
 const gridPadding = 1;
-const headerItem = 'rounded text-center sdark-fg p-3 w-100';
-const centeredItems = 'h-100 d-flex align-items-center justify-content-center';
+export const headerItem = "rounded text-center sdark-fg p-3 w-100";
+export const centeredItem = "h-100 d-flex align-items-center justify-content-center";
 
 export const InfoHeader = ({ subject, info }: InfoHeaderProps) => (
     <Header>
-
         <div className="p-2">
             <div className="row">
-                <div className={`col-8 pr-${gridPadding}`}>
-                    <div className={`${centeredItems} ${headerItem}`}>
-                        <h3>
-                            {subject}
-                        </h3>
+                <div className={`col-8 pe-${gridPadding}`}>
+                    <div className={`${centeredItem} ${headerItem}`}>
+                        <h3>{subject}</h3>
                     </div>
                 </div>
-                <div className={`col-4 pl-${gridPadding}`}>
+                <div className={`col-4 ps-${gridPadding}`}>
                     <div>
                         <div className="col">
-                            {
-                                info.map((tidbit, index) => (
-                                    <div className={`row ${infoPadding(index, info.length - 1)}`}>
-                                        <div className={`${headerItem} w-100`}>
-                                            {tidbit}
-                                        </div>
-                                    </div>
-                                ))
-                            }
+                            {info.map((tidbit, index) => (
+                                <div className={`row ${infoPadding(index, info.length - 1)}`}>
+                                    <div className={`${headerItem} w-100`}>{tidbit}</div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -82,55 +78,178 @@ export const InfoHeader = ({ subject, info }: InfoHeaderProps) => (
                 <div className={`col pb-${gridPadding}`}>
                     <div className={headerItem}>
                         <div className="p-2">
-                        <h2>
-                            {subject}
-                        </h2>
+                            <h2>{subject}</h2>
                         </div>
                     </div>
                 </div>
             </div>
             <div className="row row-cols-2">
-                {
-                    info.map((tidbit, index) => (
-                        <div className={`col py-${gridPadding} ${(index % 2 === 0 ? 'pr' : 'pl')}-${gridPadding}`}>
-                            <div className={`${centeredItems} ${headerItem}`}>
-                                {tidbit}
-                            </div>
-                        </div>
-                    ))
-                }
+                {info.map((tidbit, index) => (
+                    <div className={`col py-${gridPadding} ${index % 2 === 0 ? "pr" : "pl"}-${gridPadding}`}>
+                        <div className={`${centeredItem} ${headerItem}`}>{tidbit}</div>
+                    </div>
+                ))}
             </div>
         </div>
-      
     </Header>
 );
 
 export const edgePadding: string[] = (() => {
     let paddingIndexes: { [s: string]: number[] } = {
-        'pt-1': [1, 2, 3, 4, 5],      // top
-        'pr-1': [5, 10, 15, 20, 25],  // right
-        'pl-1': [1, 6, 11, 16, 21],   // left
-        'pb-1': [21, 22, 23, 24, 25], // bottom
-    }
+        "pt-1": [1, 2, 3, 4, 5], // top
+        "pe-1": [5, 10, 15, 20, 25], // right
+        "ps-1": [1, 6, 11, 16, 21], // left
+        "pb-1": [21, 22, 23, 24, 25], // bottom
+    };
 
     return Array(25)
         .fill(0)
         .map((_, tileIndex) => {
             tileIndex++;
-            let padding = ['pt-1', 'pb-1', 'pl-1', 'pr-1'];
+            let padding = ["pt-1", "pb-1", "ps-1", "pe-1"];
 
-            Object.entries(paddingIndexes).forEach(([ pad, indexes ]) => {
+            Object.entries(paddingIndexes).forEach(([pad, indexes]) => {
                 if (indexes.includes(tileIndex)) {
                     let padIndex = padding.indexOf(pad);
                     padding.splice(padIndex, 1);
                 }
             });
 
-            return padding.join(' ');
-        })
+            return padding.join(" ");
+        });
 })();
 
+/*
+const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sept',
+    'Oct',
+    'Nov',
+    'Dec',
+];
+*/
+
+const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+];
+
 export const parseDate = (s: string) => {
-    let date = new Date(Date.parse(s));
-    return date.toLocaleString();
+    const date = new Date(Date.parse(s));
+    const now = new Date();
+    const yearStr = date.getFullYear() !== now.getFullYear() ? `, ${date.getFullYear() % 100}` : "";
+
+    //return date.toLocaleString();
+    return `${months[date.getMonth()]} ${date.getDate()}${yearStr}`;
+};
+
+interface SubscribeButtonProps {
+    subbed: boolean | null;
+    apiCall: () => Promise<ApiResponse>;
+}
+
+export const SubscribeButton = ({ subbed, apiCall }: SubscribeButtonProps) => {
+    const [subState, setSubbed] = useState(subbed);
+    const { ifAuth } = useAuth();
+
+    return (
+        <Button
+            variant={subState ? "secondary" : "danger"}
+            className="rounded-pill"
+            onClick={() =>
+                ifAuth(() => {
+                    setSubbed(!subState);
+                    apiCall();
+                })
+            }
+        >
+            {subState ? "Subscribed" : "Subscribe"}
+        </Button>
+    );
+};
+
+interface HashtagButtonProps {
+    name: string;
+    category: Category;
+    color?: string;
+}
+
+export const HashtagButton = ({ category, name }: HashtagButtonProps) => {
+    const history = useHistory();
+
+    return (
+        <Button
+            variant="primary"
+            className="text-white rounded-pill mb-2 me-2 py-1"
+            onClick={() => history.push(`/categories/${category.name}/?hashtag=${name}`)}
+        >
+            #{name}
+        </Button>
+    );
+};
+
+interface CategoryListProps {
+    categories: Category[];
+}
+
+export const CategoryList = ({ categories }: CategoryListProps) => {
+    return (
+        <Col>
+            {categories.map((category) => (
+                <Row>
+                    <Col className="my-2">
+                        <Row>
+                            <Col xs={2}>
+                                <div
+                                    className="rounded-circle p-4"
+                                    style={{
+                                        backgroundImage: `url("${category.icon_url}")`,
+                                        backgroundPosition: "center",
+                                        backgroundSize: "cover",
+                                        //width: "40px",
+                                        //width: "40px",
+                                        //height: "40px",
+                                    }}
+                                ></div>
+                            </Col>
+                            <Col>
+                                <small>
+                                    <Link to={`/categories/${category.name}`}>
+                                        <b>{category.name}</b>
+                                    </Link>
+                                    <p>
+                                        {category.subscriber_count} Subscriber
+                                        {category.subscriber_count === 1 ? "" : "s"}
+                                    </p>
+                                </small>
+                            </Col>
+                            <Col className="pe-0">
+                                <SubscribeButton
+                                    subbed={category.is_subscribed}
+                                    apiCall={() => api.createSubscription({ id: category.id })}
+                                />
+                            </Col>
+                        </Row>
+                    </Col>
+                </Row>
+            ))}
+        </Col>
+    );
 };
