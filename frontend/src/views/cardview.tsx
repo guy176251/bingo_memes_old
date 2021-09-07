@@ -1,4 +1,4 @@
-import { useState, useRef, ReactElement } from "react";
+import { useState, useRef, ReactElement, useEffect, ReactNode } from "react";
 import { Helmet } from "react-helmet";
 
 import { useParams } from "react-router-dom";
@@ -10,49 +10,52 @@ import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTimes, faExpandAlt, faSearch } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon as FaIcon } from "@fortawesome/react-fontawesome";
+import {
+    IconDefinition,
+    faTh,
+    faEye,
+    faAlignJustify,
+    faPlusCircle,
+    faMinusCircle,
+    faTimes,
+    faExpandAlt,
+    faSearch,
+} from "@fortawesome/free-solid-svg-icons";
 
 import { AppNavBar, AppNavBarButtons } from "../components/navbar";
 import CardInfo from "../components/cardinfo";
-import { edgePadding } from "../components/snippets";
+//import { edgePadding } from "../components/helpers";
 import { BingoTile, BingoCard } from "../types";
 import ApiRender from "../api/render";
 import api from "../api/backend";
 import debugLog from "../debug";
 
+const isMobile = () => Boolean(navigator.maxTouchPoints);
+
 //=============================//
 // bingo card solution checker //
 //=============================//
 
-const solutionIndexes = (() => {
-    let edge = Array(5)
-        .fill(0)
-        .map((_, i) => i);
-    let vert = edge.map((n) =>
-        Array(5)
-            .fill(0)
-            .map((_, i) => i * 5 + n)
-    );
-    let horiz = edge.map((n) =>
-        Array(5)
-            .fill(0)
-            .map((_, i) => i + 5 * n)
-    );
-    let diag1 = Array(5)
-        .fill(0)
-        .map((_, i) => i * 4 + 4);
-    let diag2 = Array(5)
-        .fill(0)
-        .map((_, i) => i * 6);
+const solutionArrays = (() => {
+    // Bingo card is 5 x 5, so can use the same length array
+    // for all the dimensions.
+    const side = Array(5).fill(0);
+
+    const edge = side.map((_, i) => i);
+    const vert = edge.map((n) => side.map((_, i) => i * 5 + n));
+    const horiz = edge.map((n) => side.map((_, i) => i + 5 * n));
+    const diag1 = side.map((_, i) => i * 4 + 4);
+    const diag2 = side.map((_, i) => i * 6);
+
     return [...vert, ...horiz, diag1, diag2];
 })();
 
 type SolutionArray = BingoTile[];
 
 const checkForBingo = (card: BingoCard): SolutionArray | undefined => {
-    if (solutionIndexes.some((line) => line.every((index) => card.tiles[index].clicked))) {
-        var solution = solutionIndexes.filter((line) => line.every((index) => card.tiles[index].clicked))[0];
+    if (solutionArrays.some((line) => line.every((index) => card.tiles[index].clicked))) {
+        const solution = solutionArrays.filter((line) => line.every((index) => card.tiles[index].clicked))[0];
         return solution.map((index) => card.tiles[index]);
     }
 };
@@ -65,7 +68,7 @@ type CardSetter = (card: BingoCard) => void;
 type SolutionSetter = (solution: SolutionArray) => void;
 
 const tileHover = (tile: BingoTile, state: boolean, card: BingoCard, setCard: CardSetter) => {
-    if (!navigator.maxTouchPoints) {
+    if (!isMobile()) {
         const tiles = card.tiles;
         const index = tiles.indexOf(tile);
         tiles[index].hovered = state;
@@ -98,18 +101,14 @@ const resetBingo = (card: BingoCard | null, setCard: CardSetter, setSolution: So
     }
 };
 
-const colorTheTile = (tile: BingoTile) => {
-    if (tile.clicked) return clickedColor;
-    else if (tile.hovered) return hoverColor;
-    else return "sdark-fg";
-};
-
-//====================//
-// cardview variables //
-//====================//
-
 const clickedColor = "bg-sdark-green text-white";
 const hoverColor = "bg-sdark-magenta text-white";
+
+const tileColor = (tile: BingoTile, defaultColor: string = "sdark-fg") => {
+    if (tile.clicked) return clickedColor;
+    else if (tile.hovered) return hoverColor;
+    else return defaultColor;
+};
 
 //====================//
 // cardview component //
@@ -122,21 +121,6 @@ interface CardLayoutProps {
 
 const CardLayout = ({ passedCard, cardInfo }: CardLayoutProps) => {
     const [card, setCard] = useState(() => {
-        /*
-    let tileFields = Object.entries(passedCard).filter(([field, _]) =>
-      field.startsWith("tile_")
-    );
-    let tiles = tileFields.map(([_, text], index) => ({
-      text: text,
-      hovered: false,
-      clicked: false,
-      id: index + 1,
-    }));
-    tileFields.forEach(([field, _]) =>
-      Reflect.deleteProperty(passedCard, field)
-    );
-    */
-
         let tiles = passedCard.tiles.map((tile) => ({
             ...tile,
             hovered: false,
@@ -147,122 +131,227 @@ const CardLayout = ({ passedCard, cardInfo }: CardLayoutProps) => {
         debugLog({ CARD: "init card" });
         return passedCard;
     });
+
+    const filterTiles = () =>
+        card.tiles.filter((tile) => {
+            return tile.text.toLowerCase().includes(tileSearchQuery.toLowerCase());
+        });
+
     const [tileSearchQuery, setTileSearchQuery] = useState("");
     const [solution, setSolution] = useState<SolutionArray>([]);
-    const [topToggled, setTopToggled] = useState(true);
+    const [topVisible, setTopVisible] = useState(true);
+    const [overviewVisible, setOverviewVisible] = useState(true);
+    const [gridMode, setGridMode] = useState(false);
+    const [filteredTiles, setFilteredTiles] = useState<BingoTile[]>(filterTiles());
+
+    useEffect(() => setFilteredTiles(filterTiles()), [tileSearchQuery]);
+
     const inputRef = useRef<HTMLInputElement>(null);
     const solved = Boolean(solution.length);
 
     const changeSearch = (e: any) => setTileSearchQuery(e.target.value);
     const resetSearch = () => {
         setTileSearchQuery("");
-        setTopToggled(true);
+        setTopVisible(true);
     };
-    const showTop = () => setTopToggled(true);
+    const showTop = () => setTopVisible(true);
     const hideTop = () => {
         window.scrollTo({
             top: 0,
             behavior: "smooth",
         });
-        setTopToggled(false);
+        setTopVisible(false);
         inputRef.current && inputRef.current.focus();
     };
+
     const buttons: AppNavBarButtons = [[faSearch, "Search", hideTop]];
-    if (!topToggled) buttons.push([faExpandAlt, "Expand", showTop]);
+    if (!topVisible) buttons.push([faExpandAlt, "Expand", showTop]);
 
-    const filteredTiles = card.tiles.filter((tile) => {
-        return tile.text.toLowerCase().includes(tileSearchQuery.toLowerCase());
-    });
+    debugLog({ CARD: "render", query: tileSearchQuery, solution, topVisible });
 
-    debugLog({ CARD: "render", query: tileSearchQuery, solution, topToggled });
-    //`\nLAYOUT:\n\n    card: ${card.name}\n    query: ${tileSearchQuery}\n    solution: ${solution}\n    topToggled: ${topToggled}\n`
+    const CollapseButton = () => (
+        <div className="hover-white" onClick={() => setOverviewVisible(!overviewVisible)} style={{ cursor: "pointer" }}>
+            <FaIcon icon={overviewVisible ? faMinusCircle : faPlusCircle} />
+        </div>
+    );
+
+    const toggleClass = topVisible ? "" : "d-none d-lg-block";
+    const overviewClass = overviewVisible ? "" : "d-none";
+    const gridColSize = gridMode ? 12 : 7;
+    const gridRowCols = gridMode ? 5 : 1;
+    const gridInfoColSize = gridMode ? 6 : 5;
+    const gridTileClass = gridMode ? "text-center p-3" : "p-2";
+    const gridTileSize = gridMode ? 10 : 12;
+    const gridSearchSize = gridMode ? 6 : 12;
 
     return (
         <>
             <Helmet>
                 <title>{card.name}</title>
             </Helmet>
-            <Row className="pt-2">
-                <Col id="info-and-indicators" xs={12} md={6} lg={5} className="px-2">
-                    <div id="card-info" className={"pb-2 " + (topToggled ? "" : "d-none d-md-block")}>
-                        <div className="mb-2">{cardInfo}</div>
-                        <Col id="indicators" className="text-center">
-                            <Row className="row-cols-5">
+            <Row id="card-container" className="g-3 justify-content-lg-center">
+                <Col id="hide-on-search" className={toggleClass} xs={12} lg={gridInfoColSize}>
+                    <Row className="g-3">
+                        <Col id="card-info" xs={12} className={toggleClass}>
+                            {cardInfo}
+                        </Col>
+                        <Col id="toolbar" xs={12}>
+                            <div className="rounded sdark-fg px-3 py-2">
+                                <div className="d-flex flex-wrap">
+                                    <div
+                                        className={`rounded-pill me-2 px-3 py-1 ${
+                                            overviewVisible ? "bg-sdark-orange text-white" : "sdark-bg"
+                                        }`}
+                                        onClick={() => setOverviewVisible(!overviewVisible)}
+                                        style={{ cursor: "pointer" }}
+                                    >
+                                        <FaIcon icon={faEye} className="me-3" />
+                                        Overview
+                                    </div>
+                                    {(
+                                        [
+                                            ["Row", faAlignJustify, false],
+                                            ["Grid", faTh, true],
+                                        ] as Array<[ReactNode, IconDefinition, boolean]>
+                                    ).map(([label, icon, gridValue]) => {
+                                        const color =
+                                            gridValue === gridMode ? "bg-sdark-orange text-white" : "sdark-bg";
+                                        const onClick = () => {
+                                            setGridMode(gridValue);
+                                            setOverviewVisible(!gridValue);
+                                        };
+
+                                        return (
+                                            <div
+                                                className={`d-none d-lg-block rounded-pill me-2 px-3 py-1 ${color}`}
+                                                onClick={onClick}
+                                                style={{ cursor: "pointer" }}
+                                            >
+                                                <FaIcon icon={icon} className="me-3" />
+                                                {label}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </Col>
+                        <Col id="overview" xs={12} className={overviewClass}>
+                            {/*
+                            <Row className="g-3">
+                                <Col id="overview-header" xs={12}>
+                                    <div className="rounded px-3 py-2 sdark-fg">
+                                        <Row>
+                                            <Col xs={2}>
+                                                <div className="d-flex justify-content-center">
+                                                    <CollapseButton />
+                                                </div>
+                                            </Col>
+                                            <Col xs={10} className="ps-0">
+                                                <b>Card Overview</b>
+                                            </Col>
+                                        </Row>
+                                    </div>
+                                </Col>
+                                <Col id="overview-body" xs={12} className={overviewClass}>
+                                </Col>
+                            </Row>
+                                */}
+                            <Row className="row-cols-5 g-2 text-center">
                                 {card.tiles.map((tile, index) => (
-                                    <Col className={`p-0 ${edgePadding[index]}`}>
-                                        <Col className={`py-2 rounded ${colorTheTile(tile)}`}>{index + 1}</Col>
+                                    <Col>
+                                        <div className={`py-2 rounded ${tileColor(tile, "sdark-fg")}`}>{index + 1}</div>
                                     </Col>
                                 ))}
                             </Row>
                         </Col>
-                    </div>
-                    <div id="search-bar" className="pb-2">
-                        {!topToggled && (
-                            <div className="d-md-none text-sdark-bg p-0 pb-1">
-                                <small>Card info hidden. Click on the expand button to show them.</small>
-                            </div>
-                        )}
-                        <InputGroup>
-                            <Form.Control
-                                placeholder="Search bingo tiles"
-                                type="string"
-                                className="slight-bg"
-                                value={tileSearchQuery}
-                                style={{ cursor: "pointer" }}
-                                onChange={changeSearch}
-                                onFocus={hideTop}
-                                ref={inputRef}
-                            />
-                            {tileSearchQuery && (
-                                <InputGroup.Text onClick={resetSearch} style={{ cursor: "pointer" }}>
-                                    {/*
-                                    <Button variant="danger" className="bg-sdark-red" onClick={resetSearch}>
-                                    </Button>
-                                    */}
-                                    <FontAwesomeIcon icon={faTimes} />
-                                </InputGroup.Text>
-                            )}
-                        </InputGroup>
-                    </div>
+                    </Row>
                 </Col>
-                <Col id="tiles" xs={12} md={6} lg={7} className="px-2">
-                    {tileSearchQuery && (
-                        <div className={"text-sdark-bg text-center p-0 " + (filteredTiles.length ? "pb-3" : "")}>
-                            {filteredTiles.length
-                                ? `${filteredTiles.length} result` + (filteredTiles.length > 1 ? "s" : "")
-                                : "No results"}
-                        </div>
-                    )}
-                    <Row className="row-cols-1 row-cols-md-1">
-                        {filteredTiles.map((tile, index) => (
-                            <Col className={index === 0 ? "pb-1" : "py-1"}>
-                                <Col
-                                    style={{ cursor: "pointer" }}
-                                    className={`rounded h-100 py-2 ${colorTheTile(tile)}`}
-                                    onClick={() => tileClick(tile, card, setCard, setSolution)}
-                                    onMouseEnter={() => tileHover(tile, true, card, setCard)}
-                                    onMouseLeave={() => tileHover(tile, false, card, setCard)}
-                                >
-                                    <Row>
-                                        <Col
-                                            xs={2}
-                                            lg={1}
-                                            className={
-                                                "border" +
-                                                (tile.hovered || tile.clicked ? "" : "-sdark") +
-                                                "-right" +
-                                                " text-center"
-                                            }
-                                        >
-                                            {index + 1}
+                <Col id="tiles-and-search-bar" xs={12} lg={gridColSize}>
+                    <Row className="g-3 justify-content-center">
+                        <Col id="search-bar" xs={12} lg={gridSearchSize}>
+                            <Row className="g-3">
+                                <Col xs={12} className={"d-lg-none " + (topVisible ? "d-none" : "")}>
+                                    <div className="px-3 py-2 rounded sdark-fg">
+                                        <small>Card info hidden. Click on the expand button to show them.</small>
+                                    </div>
+                                </Col>
+                                <Col xs={12}>
+                                    <Row className="g-2">
+                                        <Col>
+                                            {/* Inputs can't be nested in another component */}
+                                            <InputGroup>
+                                                <InputGroup.Text>
+                                                    <FaIcon icon={faSearch} />
+                                                </InputGroup.Text>
+                                                <Form.Control
+                                                    placeholder="Search bingo tiles"
+                                                    type="string"
+                                                    value={tileSearchQuery}
+                                                    style={{ cursor: "pointer" }}
+                                                    onChange={changeSearch}
+                                                    onFocus={hideTop}
+                                                    ref={inputRef}
+                                                />
+                                                {tileSearchQuery && (
+                                                    <InputGroup.Text
+                                                        onClick={resetSearch}
+                                                        style={{ cursor: "pointer" }}
+                                                        className="input-group-text-clear"
+                                                    >
+                                                        <FaIcon icon={faTimes} />
+                                                    </InputGroup.Text>
+                                                )}
+                                            </InputGroup>
                                         </Col>
-                                        <Col>{tile.text}</Col>
+                                        {tileSearchQuery && (
+                                            <Col xs={4} lg={3}>
+                                                <div className="px-2 rounded bg-sdark-cyan text-white text-center h-100 d-flex align-items-center justify-content-center">
+                                                    {`${filteredTiles.length || "No"} result` +
+                                                        (filteredTiles.length === 1 ? "" : "s")}
+                                                </div>
+                                            </Col>
+                                        )}
                                     </Row>
                                 </Col>
-                            </Col>
-                        ))}
+                            </Row>
+                        </Col>
+                        <Col id="tiles" xs={12} lg={gridTileSize}>
+                            <Row id="tile-rows" className={`g-2 row-cols-1 row-cols-lg-${gridRowCols}`}>
+                                {filteredTiles.map((tile, index) => (
+                                    <Col>
+                                        <div
+                                            style={{ cursor: "pointer" }}
+                                            className={`rounded h-100 ${tileColor(tile)} ${gridTileClass}`}
+                                            onClick={() => tileClick(tile, card, setCard, setSolution)}
+                                            onMouseEnter={() => tileHover(tile, true, card, setCard)}
+                                            onMouseLeave={() => tileHover(tile, false, card, setCard)}
+                                        >
+                                            <Row>
+                                                <Col
+                                                    xs={2}
+                                                    lg={1}
+                                                    className={`${tile.clicked || tile.hovered ? "" : "border-end"} ${
+                                                        gridMode ? "d-none" : ""
+                                                    }`}
+                                                >
+                                                    <div className="h-100 d-flex align-items-center justify-content-center">
+                                                        {index + 1}
+                                                    </div>
+                                                </Col>
+                                                <Col>
+                                                    <div className="h-100">
+                                                        {index === 1
+                                                            ? "one"
+                                                            : "Adipisicing exercitationem cum impedit natus consectetur."}
+                                                    </div>
+                                                </Col>
+                                            </Row>
+                                        </div>
+                                    </Col>
+                                ))}
+                            </Row>
+                        </Col>
                     </Row>
-                    <hr className="sdark-hr" />
                 </Col>
 
                 <Modal
@@ -323,40 +412,11 @@ const CardView = () => {
             key={cardId}
             apiCall={() => api.getCard(cardId)}
             loadingMessage={`Loading bingo card ${cardId}`}
-            component={({ data }) => <CardLayout passedCard={data} cardInfo={<CardInfo card={data} />} />}
+            component={({ data }) => (
+                <CardLayout passedCard={data} cardInfo={<CardInfo card={data} collapse={isMobile()} />} />
+            )}
         />
     );
 };
-/*
-    const loc = useLocation();
-    const card = 
-        loc.state
-            ? (loc.state as { card?: BingoCard }).card
-            : null;
-
-    return (
-        <>
-            {
-                card
-                    ? <CardLayout
-                            passedCard={card}
-                            cardInfo={<CardInfo card={card}/>}
-                        />
-
-                    : <ApiRender
-                            apiCall={() => api.getCard(cardId)}
-                            loadingMessage={`Loading bingo card ${cardId}`}
-                            component={({ data }) => (
-                                <CardLayout
-                                    passedCard={data}
-                                    cardInfo={<CardInfo card={data}/>}
-                                />
-                            )}
-                        />
-            }
-        </>
-    );
-}
-*/
 
 export default CardView;

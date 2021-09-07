@@ -125,7 +125,7 @@ class CardDetail(generics.RetrieveUpdateDestroyAPIView):
                           IsAuthorOrReadOnly]
 
     def put(self, request: Request, *args, **kwargs):
-        return Response(status=status.HTTP_403_FORBIDDEN)
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
     #    card = self.get_object()
     #    site_user = request.user.site_user
     #    #print(f'{site_user = }\n{card.author = }')
@@ -343,11 +343,12 @@ def create_user_view(request):
 def login_view(request):
     serializer = LoginSerializer(data=request.data)
     if not serializer.is_valid():
-        print(serializer.errors)
+        print(f'improper format: {serializer.errors}')
         return Response({'valid': False}, status=status.HTTP_400_BAD_REQUEST)
 
     user = authenticate(**serializer.data)
     if not user:
+        print('password incorrect')
         return Response({'valid': False}, status=status.HTTP_400_BAD_REQUEST)
 
     login(request, user)

@@ -66,4 +66,4 @@ def adjust_card_scores(card: BingoCard):
         author.score = sum(author.cards_created.values_list('score', flat=True))
         author.save()
 
-    print(card)
+    #print(card)

@@ -1,14 +1,11 @@
-import { Link, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet";
+import { CardListSidebar } from "../components/cardlist";
+
+/*
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-
-import ApiRender from "../api/render";
-import api from "../api/backend";
-import { BingoCard, Category } from "../types";
-import { CardListSidebar } from "../components/cardlist";
-import { Header, parseDate } from "../components/snippets";
-import debugLog from "../debug";
+import { Link, useParams } from "react-router-dom";
+*/
 
 const HomePageView = () => {
     return (

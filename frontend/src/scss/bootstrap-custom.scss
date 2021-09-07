@@ -29,6 +29,30 @@ $theme-colors: (
     "dark": $base02,
 );
 
+$primary: $blue;
+$secondary: $base01;
+$success: $green;
+$info: $cyan;
+$warning: $yellow;
+$danger: $red;
+$light: $base3;
+$dark: $base02;
+
 $border-color: $base01;
 
+$input-bg: $base3;
+$input-color: $base01;
+$input-border-color: $input-bg;
+
+$input-focus-bg: $input-bg;
+$input-focus-color: $input-color;
+$input-focus-border-color: $input-bg;
+$input-focus-width: 0;
+$input-focus-box-shadow: none;
+
+$input-group-addon-color: $base3;
+$input-group-addon-bg: $cyan;
+$input-group-addon-border-color: $input-group-addon-bg;
+
+@import "bootstrap/scss/utilities";
 @import "bootstrap/scss/bootstrap";

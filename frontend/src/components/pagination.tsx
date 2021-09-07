@@ -83,13 +83,9 @@ const Pagination = ({ pageSize, itemCount, label, top = false }: PaginationProps
         const endIndex = rowSize - 1;
 
         return (
-            <Row className={`row-cols-${rowSize}`}>
+            <Row className={`g-2 row-cols-${rowSize}`}>
                 {paginationItems.map((item, index) => (
-                    <Col className="p-0">
-                        <div className={index === endIndex ? "" : "pe-2"}>
-                            {item !== null && <PageItem index={item} />}
-                        </div>
-                    </Col>
+                    <Col>{item !== null && <PageItem index={item} />}</Col>
                 ))}
             </Row>
         );
@@ -149,31 +145,25 @@ const Pagination = ({ pageSize, itemCount, label, top = false }: PaginationProps
         const currentSortIndicator = "rounded-pill sdark-bg";
 
         return (
-            <Row>
-                <Col className="p-0">
-                    <div className="rounded py-2 px-3 sdark-fg">
-                        <Navbar variant="dark" className="p-0">
-                            <Nav>
-                                {Object.entries(orderingParams).map(([n, q]) => {
-                                    sortParams.set("sort", n);
-                                    return (
-                                        <Nav.Item
-                                            className={`px-2 me-2 ${n === currentSort ? currentSortIndicator : ""}`}
-                                        >
-                                            <Nav.Link as={Link} to={`${paginationUrl}?${sortParams.toString()}`}>
-                                                <p className="text-capitalize m-0">
-                                                    <FaIcon icon={orderingIcons[n]} className="me-3" />
-                                                    {n}
-                                                </p>
-                                            </Nav.Link>
-                                        </Nav.Item>
-                                    );
-                                })}
-                            </Nav>
-                        </Navbar>
-                    </div>
-                </Col>
-            </Row>
+            <div className="rounded py-2 px-3 sdark-fg">
+                <Navbar variant="dark" className="p-0">
+                    <Nav>
+                        {Object.entries(orderingParams).map(([n, q]) => {
+                            sortParams.set("sort", n);
+                            return (
+                                <Nav.Item className={`px-2 me-2 ${n === currentSort ? currentSortIndicator : ""}`}>
+                                    <Nav.Link as={Link} to={`${paginationUrl}?${sortParams.toString()}`}>
+                                        <p className="text-capitalize m-0">
+                                            <FaIcon icon={orderingIcons[n]} className="me-3" />
+                                            {n}
+                                        </p>
+                                    </Nav.Link>
+                                </Nav.Item>
+                            );
+                        })}
+                    </Nav>
+                </Navbar>
+            </div>
         );
     };
 

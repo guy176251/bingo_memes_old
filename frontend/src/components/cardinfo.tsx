@@ -5,196 +5,268 @@ import { Link, useHistory } from "react-router-dom";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Modal from "react-bootstrap/Modal";
-//import Button from 'react-bootstrap/Button';
+import Button from "react-bootstrap/Button";
 
 import { FontAwesomeIcon as FaIcon } from "@fortawesome/react-fontawesome";
-import { faTrash, faEdit, faArrowUp, faArrowDown, IconDefinition } from "@fortawesome/free-solid-svg-icons";
+import {
+    faMinusCircle,
+    faPlusCircle,
+    faTrash,
+    faEdit,
+    faArrowUp,
+    faArrowDown,
+    IconDefinition,
+} from "@fortawesome/free-solid-svg-icons";
 
-import { BingoCard, UserState } from "../types";
-//import { UserAuthContext } from "../context";
+import { BingoCard } from "../types";
 import api from "../api/backend";
 import { useAuth } from "../auth";
-import { centeredItem, HashtagButton } from "../components/snippets";
+import { HashtagButton } from "../components/snippets";
+import { createdAtStr } from "../components/helpers";
+//import debugLog from "../debug";
 
-const minute = 1000 * 60;
-const hour = minute * 60;
-const day = hour * 24;
-const month = day * 31;
-const year = month * 12;
-const times: { [s: string]: number } = {
-    year: year,
-    month: month,
-    day: day,
-    hour: hour,
-    minute: minute,
-};
-
-const dateStr = (isoString: string) => {
-    var now = new Date(Date.now());
-    var date = new Date(Date.parse(isoString));
-    var diff = now.getTime() - date.getTime();
-
-    for (const str in times) {
-        let time = times[str];
-        if (diff >= time) {
-            let value = Math.floor(diff / time);
-            value = time === minute ? value % 60 : value;
-            let s = value > 1 ? "s" : "";
-            return `${value} ${str}${s} ago`;
-        }
-    }
-
-    return "just now";
-};
-
-const sendVote = async (card: BingoCard, up: boolean) => {
-    await api.createVote({ card: { id: card.id }, up: up });
-};
+const upvoteScore = (uv: boolean | null) => (uv === null ? 0 : uv ? 1 : -1);
 
 interface VoteButtonsProps {
     card: BingoCard;
+    itemMargin?: string;
 }
 
-const VoteButtons = ({ card }: VoteButtonsProps) => {
-    //const user = useContext(UserAuthContext);
-    const { user } = useAuth();
-    const inactiveColor = "sdark-fg";
-    const upColor = "sdark-orange";
-    const downColor = "sdark-violet";
+const VoteButtons = ({ card, itemMargin = "" }: VoteButtonsProps) => {
+    const [upvoted, setUpvoted] = useState<boolean | null>(card.upvoted);
 
-    var u = false;
-    var d = false;
-    var a = 0;
-    var t = `text-${inactiveColor}`;
-    if (card.upvoted !== null) {
-        a = card.upvoted ? -1 : 1;
-        if (card.upvoted) {
-            u = true;
-            t = `text-${upColor}`;
-        } else {
-            d = true;
-            t = `text-${downColor}`;
-        }
-    }
+    const upColor = upvoted ? "orange" : "fg";
+    const downColor = upvoted === false ? "violet" : "fg";
+    const scoreColor = upvoted === null ? "fg" : upvoted ? "orange" : "violet";
+    const scoreAdjust = upvoteScore(upvoted) - upvoteScore(card.upvoted);
 
-    var voteAdjust = a;
-    const [up, setUp] = useState(u);
-    const [down, setDown] = useState(d);
-    const [scoreColor, setScoreColor] = useState(t);
-
-    const changeVoteState = (activeColor: string, state: boolean, setState: (b: boolean) => void) => {
-        setUp(false);
-        setDown(false);
-        setState(!state);
-        setScoreColor("text-" + (!state ? activeColor : inactiveColor));
+    const voteAction = (up: boolean) => {
+        setUpvoted(upvoted === null || up !== upvoted ? up : null);
+        api.createVote({ card: { id: card.id }, up: up });
     };
 
-    const upvoteClick = () => {
-        changeVoteState(upColor, up, setUp);
-        sendVote(card, true);
-    };
-    const downvoteClick = () => {
-        changeVoteState(downColor, down, setDown);
-        sendVote(card, false);
-    };
-
-    var currentUpColor = up ? upColor : inactiveColor;
-    var currentDownColor = down ? downColor : inactiveColor;
-
-    var voteScore = 0;
-    if (up && !down) voteScore = 1;
-    else if (down && !up) voteScore = -1;
-
-    voteScore += voteAdjust;
-    var loggedIn = Boolean(user);
-    // 🡅 🡇
-    return (
+    /*
         <Col xs={2} className="border-sdark-right text-center">
-            <VoteButtonSingle
-                icon={faArrowUp}
-                color={currentUpColor}
-                loggedIn={loggedIn}
-                voteAction={upvoteClick}
-                user={user}
-            />
-            <div className={`my-1 ${scoreColor}`}>
-                <h5>{card.score + voteScore}</h5>
-            </div>
-            <VoteButtonSingle
-                icon={faArrowDown}
-                color={currentDownColor}
-                loggedIn={loggedIn}
-                voteAction={downvoteClick}
-                user={user}
-            />
         </Col>
+    */
+    return (
+        <>
+            <div className={itemMargin}>
+                <VoteButtonSingle
+                    icon={faArrowUp}
+                    color={`text-sdark-${upColor}`}
+                    voteAction={() => voteAction(true)}
+                />
+            </div>
+            <div className={`text-sdark-${scoreColor} ${itemMargin}`}>
+                <h5 className="m-0">{card.score + scoreAdjust}</h5>
+            </div>
+            <div className={itemMargin}>
+                <VoteButtonSingle
+                    icon={faArrowDown}
+                    color={`text-sdark-${downColor}`}
+                    voteAction={() => voteAction(false)}
+                />
+            </div>
+        </>
     );
 };
 
 interface VoteButtonSingleProps {
     icon: IconDefinition;
     color: string;
-    loggedIn: boolean;
     voteAction: () => void;
-    user: UserState;
 }
 
-const VoteButtonSingle = ({ icon, color, loggedIn, voteAction, user }: VoteButtonSingleProps) => (
-    <div
-        className={`text-${color} ${user ? "vote-btn" : ""} p-1 rounded`}
-        onClick={loggedIn ? voteAction : () => {}}
-        style={loggedIn ? { cursor: "pointer" } : {}}
-    >
-        <FaIcon icon={icon} />
-    </div>
-);
+const VoteButtonSingle = ({ icon, color, voteAction }: VoteButtonSingleProps) => {
+    const { ifAuth } = useAuth();
+
+    return (
+        <div className={`${color} vote-btn p-1 rounded`} onClick={() => ifAuth(voteAction)}>
+            <FaIcon icon={icon} />
+        </div>
+    );
+};
+
+const EditDeleteButtons = ({ card, itemMargin = "" }: { itemMargin?: string; card: BingoCard }) => {
+    const { user } = useAuth();
+    const history = useHistory();
+    const [showModal, setModal] = useState(false);
+    const toggleModal = () => setModal(!showModal);
+
+    return (
+        <>
+            {user && card.author.id === user.id && (
+                <>
+                    <Link to={`/cards/${card.id}/edit/`}>
+                        <div className={`text-sdark-red ${itemMargin}`}>
+                            <FaIcon icon={faEdit} />
+                        </div>
+                    </Link>
+                    <div className={`text-sdark-red ${itemMargin}`} style={{ cursor: "pointer" }} onClick={toggleModal}>
+                        <FaIcon icon={faTrash} />
+                    </div>
+                    <Modal
+                        show={showModal}
+                        dialogAs={(props) => (
+                            <Modal.Dialog centered>
+                                <div {...props} className="modal-content rounded slight-bg"></div>
+                            </Modal.Dialog>
+                        )}
+                    >
+                        <Modal.Header closeButton>Delete Bingo Card</Modal.Header>
+                        <Modal.Body>Are you sure you want to delete bingo card "{card.name}"?</Modal.Body>
+                        <Modal.Footer>
+                            <Button
+                                variant="danger"
+                                onClick={async () => {
+                                    await api.deleteCard(card.id);
+                                    history.go(0);
+                                }}
+                            >
+                                Yes
+                            </Button>
+                            <Button variant="success" onClick={toggleModal}>
+                                No
+                            </Button>
+                        </Modal.Footer>
+                    </Modal>
+                </>
+            )}
+        </>
+    );
+};
 
 interface CardInfoProps {
     card: BingoCard;
+    minimal?: boolean;
     link?: boolean;
+    collapse?: boolean;
 }
 
-const CardInfo = ({ card, link }: CardInfoProps) => {
-    const history = useHistory();
-    const [showModal, setModal] = useState(false);
-    //const user = useContext(UserAuthContext);
+const CardInfo = ({ card, link, collapse = false, minimal = false }: CardInfoProps) => {
     const { user } = useAuth();
-    const toggleModal = () => setModal(!showModal);
-    //const goToEdit = () => history.push({ pathname: `/cards/${card.id}/edit/`, state: { cardId: card.id } });
 
     const userLink = <Link to={`/users/${card.author.id}/`}>{card.author.name}</Link>;
     const categoryLink = <Link to={`/categories/${card.category.name}/`}>{card.category.name}</Link>;
     const cardLinkUrl = `/cards/${card.id}/`;
 
-    //const cardLink = (
-    //    <Link to={{
-    //        pathname: cardLinkUrl,
-    //        state: {
-    //            card: card
-    //        },
-    //    }}>
-    //        <h5>
-    //            {card.name}
-    //        </h5>
-    //    </Link>
-    //);
-
     const CardLink = () =>
         link ? (
             <Link to={cardLinkUrl}>
-                <h5>{card.name}</h5>
+                <h5 className="m-0">{card.name}</h5>
             </Link>
         ) : (
-            <h5>{card.name}</h5>
+            <h5 className="m-0">{card.name}</h5>
         );
 
     const CardDetails = () => (
-        <Col>
+        <p className="text-sdark-fg m-0">
+            submitted {createdAtStr(card.created_at)} by {userLink} to {categoryLink}
+        </p>
+    );
+
+    const Hashtags = ({ itemMargin = "" }: { itemMargin?: string }) => (
+        <>
+            {card.hashtags.map((hashtag) => (
+                <div className={itemMargin}>
+                    <HashtagButton name={hashtag.name} category={card.category} />
+                </div>
+            ))}
+        </>
+    );
+
+    const margin = "me-3";
+    const CardInfoContents = () => (
+        <Row className="g-3">
+            <Col xs={12}>
+                <CardDetails />
+            </Col>
+            <Col xs={12} lg={6} className="order-lg-3">
+                <div className="d-flex flex-wrap align-items-center">
+                    <Hashtags itemMargin="pe-2 py-1" />
+                </div>
+            </Col>
+            <Col xs={12} lg={6} className="order-lg-2">
+                <div className="d-flex flex-wrap align-items-center">
+                    <VoteButtons card={card} itemMargin={margin} />
+                    <EditDeleteButtons card={card} itemMargin={margin} />
+                </div>
+            </Col>
+        </Row>
+    );
+
+    const CardInfoCollapse = () => {
+        const [collapsed, setCollapsed] = useState(collapse);
+
+        // responsive collapse
+        // collapse on toggle, but also auto-collapse on mobile
+        // idk if I'm crazy but this half makes sense
+        //
+        const collapsedClass = collapsed ? "" : "";
+        const expandedClass = collapsed ? "" : "";
+
+        const CollapseButton = () => (
+            <div
+                className="hover-white rounded-circle"
+                style={{ cursor: "pointer" }}
+                onClick={() => setCollapsed(!collapsed)}
+            >
+                <FaIcon icon={collapsed ? faPlusCircle : faMinusCircle} />
+            </div>
+        );
+
+        const gutter = "g-2";
+
+        return (
+            <div className="p-3 rounded sdark-fg">
+                <Row>
+                    <Col xs={2}>
+                        <div className="d-flex justify-content-center">
+                            <CollapseButton />
+                        </div>
+                    </Col>
+                    <Col xs={10} className="ps-0">
+                        <Row className={gutter}>
+                            <Col xs={12}>
+                                <CardLink />
+                            </Col>
+                            <Col id="collapse-content" xs={12} className={collapsed ? "d-none" : ""}>
+                                <Row className={gutter}>
+                                    <Col xs={12}>
+                                        <CardDetails />
+                                    </Col>
+                                    <Col xs={12}>
+                                        <div className="d-flex flex-wrap align-items-center">
+                                            <Hashtags itemMargin="pe-2 py-1" />
+                                        </div>
+                                    </Col>
+                                    <Col xs={12}>
+                                        <div className="d-flex flex-wrap align-items-center">
+                                            <VoteButtons card={card} itemMargin={margin} />
+                                            <EditDeleteButtons card={card} itemMargin={margin} />
+                                        </div>
+                                    </Col>
+                                </Row>
+                            </Col>
+                        </Row>
+                    </Col>
+                </Row>
+            </div>
+        );
+    };
+    return minimal ? <CardInfoContents /> : <CardInfoCollapse />;
+};
+
+export default CardInfo;
+/*
+    const CardDetails = () => (
+        <>
             <Row>
                 <Col>
                     <CardLink />
                     <p className="text-sdark-fg">
-                        submitted {dateStr(card.created_at)} by {userLink} to {categoryLink}
+                        submitted {createdAtStr(card.created_at)} by {userLink} to {categoryLink}
                     </p>
                 </Col>
             </Row>
@@ -205,68 +277,7 @@ const CardInfo = ({ card, link }: CardInfoProps) => {
                     ))}
                 </Col>
             </Row>
-        </Col>
-    );
-
-    const CardControls = () => (
-        <>
-            {user && card.author.id === user.id && (
-                <Col xs={1} className="border-sdark-left text-center">
-                    <Row className="d-flex justify-content-center align-items-center h-50">
-                        <Link to={`/cards/${card.id}/edit/`}>
-                            <div className="text-sdark-red">
-                                <FaIcon icon={faEdit} />
-                            </div>
-                        </Link>
-                    </Row>
-                    <Row className="d-flex justify-content-center align-items-center h-50">
-                        <div className="text-sdark-red" style={{ cursor: "pointer" }} onClick={toggleModal}>
-                            <FaIcon icon={faTrash} />
-                        </div>
-                    </Row>
-                </Col>
-            )}
         </>
     );
 
-    const DeleteModal = () => (
-        <Modal
-            show={showModal}
-            dialogAs={(props) => (
-                <Modal.Dialog centered>
-                    <div {...props} className="modal-content rounded slight-bg"></div>
-                </Modal.Dialog>
-            )}
-        >
-            <Modal.Header closeButton>Delete Bingo Card</Modal.Header>
-            <Modal.Body>Are you sure you want to delete bingo card "{card.name}"?</Modal.Body>
-            <Modal.Footer>
-                <button
-                    className="btn btn-danger"
-                    onClick={async () => {
-                        await api.deleteCard(card.id);
-                        history.go(0);
-                    }}
-                >
-                    Yes
-                </button>
-                <button className="btn btn-success" onClick={toggleModal}>
-                    No
-                </button>
-            </Modal.Footer>
-        </Modal>
-    );
-
-    return (
-        <div className="p-3 rounded sdark-fg">
-            <Row>
-                <VoteButtons card={card} />
-                <CardDetails />
-                <CardControls />
-                <DeleteModal />
-            </Row>
-        </div>
-    );
-};
-
-export default CardInfo;
+* */

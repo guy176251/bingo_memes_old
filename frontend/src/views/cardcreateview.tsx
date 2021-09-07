@@ -3,12 +3,15 @@ import { useHistory, useParams } from "react-router-dom";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Dropdown from "react-bootstrap/Dropdown";
+import InputGroup from "react-bootstrap/InputGroup";
+import Button from "react-bootstrap/Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import { FieldProps, FormikHelpers, Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 
-import { edgePadding, Header } from "../components/snippets";
+import { edgePadding } from "../components/helpers";
+import { Header } from "../components/snippets";
 import Loading from "../components/loading";
 import { BingoCard, SearchResults, Category } from "../types";
 import api from "../api/backend";
@@ -282,11 +285,11 @@ const CategorySearchBar = () => {
         </>
     );
 
-    const SuccessIndicator = () => (
-        <div className="input-group-prepend">
-            <span className={`input-group-text ${disabled ? (valid ? "success" : "error") : ""}`}>Category</span>
-        </div>
-    );
+    //const SuccessIndicator = () => (
+    //    <span className={`input-group-text ${disabled ? (valid ? "success" : "error") : ""}`}>Category</span>
+    //);
+
+    const SuccessIndicator = () => <InputGroup.Text>Category</InputGroup.Text>;
 
     // ============================================================================
     // ========================= 3. Main Element ==================================
@@ -299,7 +302,7 @@ const CategorySearchBar = () => {
             onSelect={handleSelect}
         >
             <div className="input-group slight-bg rounded">
-                <SuccessIndicator />
+                <InputGroup.Text className={disabled ? (valid ? "success" : "error") : ""}>Category</InputGroup.Text>
                 <QueryButton />
                 <input
                     disabled={showQueryButton}
@@ -382,7 +385,7 @@ const preventEnter = (keyEvent: React.KeyboardEvent<HTMLFormElement>) => {
     }
 };
 
-const CardForm = () => {
+const CardFormm = () => {
     const { card, category, isSubmitting } = useContext(FormHelperContext);
     const headerText = card
         ? `Editing "${card.name}"`
@@ -431,6 +434,57 @@ const CardForm = () => {
             <button className="btn btn-primary" type="submit" disabled={isSubmitting}>
                 Submit
             </button>
+        </Form>
+    );
+};
+
+const CardForm = () => {
+    const { card, category, isSubmitting } = useContext(FormHelperContext);
+    const headerText = card
+        ? `Editing "${card.name}"`
+        : `Create New Bingo Card ${category ? `In ${category.name}` : ""}`;
+
+    return (
+        <Form onKeyDown={preventEnter}>
+            <Header card>
+                <h2>{headerText}</h2>
+            </Header>
+
+            <Row className="g-3">
+                <Col xs={12} lg={5}>
+                    <Row className="g-3">
+                        <Col xs={12}>
+                            <FormRow name="name" label="Name" disabled={Boolean(card)} />
+                        </Col>
+                        <Col xs={12}>
+                            <CategorySearchBar />
+                        </Col>
+                        <Col xs={12}>
+                            <Row id="form-indicators" className="row-cols-5 g-2">
+                                {tileFieldNames.map((field, index) => (
+                                    <Col>
+                                        <FormRowIndicator name={field} label={`${index + 1}`} />
+                                    </Col>
+                                ))}
+                            </Row>
+                        </Col>
+                        <Col xs={12}>
+                            <Button variant="primary" type="submit" disabled={isSubmitting}>
+                                Submit
+                            </Button>
+                        </Col>
+                    </Row>
+                </Col>
+                <Col xs={12} lg={7}>
+                    <Row id="form-tiles" className="g-2">
+                        {tileFieldNames.map((field, index) => (
+                            <Col xs={12}>
+                                <FormRow name={field} label={`Tile ${index + 1}`} />
+                            </Col>
+                        ))}
+                    </Row>
+                </Col>
+            </Row>
         </Form>
     );
 };

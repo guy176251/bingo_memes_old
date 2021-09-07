@@ -37,8 +37,8 @@ export const PopularCategoriesSidebar = () => {
             apiCall={() => api.getPopularCategories()}
             component={({ data }: { data: SearchResults<Category> }) => (
                 <>
-                    <Row className="p-2">
-                        <Col className="rounded sdark-fg py-3">
+                    <Col xs={12}>
+                        <div className="rounded sdark-fg p-3">
                             <Row>
                                 <Col>
                                     <h4 className="mb-4">Popular Categories</h4>
@@ -47,10 +47,10 @@ export const PopularCategoriesSidebar = () => {
                             <Row>
                                 <CategoryList categories={data.results} />
                             </Row>
-                        </Col>
-                    </Row>
-                    <Row className="p-2">
-                        <Col className="rounded sdark-fg py-3">
+                        </div>
+                    </Col>
+                    <Col xs={12}>
+                        <div className="rounded sdark-fg p-3">
                             <h4 className="mb-4">Links</h4>
                             {[
                                 ["One", "Two"],
@@ -64,8 +64,8 @@ export const PopularCategoriesSidebar = () => {
                                     ))}
                                 </Row>
                             ))}
-                        </Col>
-                    </Row>
+                        </div>
+                    </Col>
                 </>
             )}
         />

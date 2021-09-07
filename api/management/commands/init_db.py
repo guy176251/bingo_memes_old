@@ -166,26 +166,40 @@ def init_db_new():
     db_check()
     dummy_data = create_dummy_data()
 
-    auth_usrs = User.objects.bulk_create([
-        User(
+    for usr in dummy_data.users:
+        print(usr)
+        auth_usr = User.objects.create_user(
             username=usr.name,
             password=usr.password,
             email=usr.email,
-
-        ) for usr in dummy_data.users
-    ])
-
-    site_usrs = SiteUser.objects.bulk_create([
-        SiteUser(
-            name=usr.username,
-            auth_user=usr,
+        )
+        site_usr = SiteUser.objects.create(
+            name=auth_usr.username,
+            auth_user=auth_usr,
             score=num_of_cards,
+        )
+        usr.obj = site_usr
 
-        ) for usr in auth_usrs
-    ])
+    #auth_usrs = User.objects.bulk_create([
+    #    User(
+    #        username=usr.name,
+    #        password=usr.password,
+    #        email=usr.email,
 
-    for usr, obj in zip(dummy_data.users, site_usrs):
-        usr.obj = obj
+    #    ) for usr in dummy_data.users
+    #])
+
+    #site_usrs = SiteUser.objects.bulk_create([
+    #    SiteUser(
+    #        name=usr.username,
+    #        auth_user=usr,
+    #        score=num_of_cards,
+
+    #    ) for usr in auth_usrs
+    #])
+
+    #for usr, obj in zip(dummy_data.users, site_usrs):
+    #    usr.obj = obj
 
     user_dict = {usr.name: usr for usr in dummy_data.users}
 
@@ -405,6 +419,8 @@ all_tile_texts = [
     'SIMP',
     'Connor purposefully starts an argument',
 ]
+
+#print(len(max(all_tile_texts, key=lambda t: len(t))))
 
 
 class Command(BaseCommand):

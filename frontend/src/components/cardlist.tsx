@@ -36,12 +36,34 @@ interface CardResults {
 
 const CardLayout = ({ data }: { data: CardResults }) => {
     const PaginationThing = ({ header }: { header?: boolean }) => (
-        <div className="p-2">
+        <Col xs={12}>
             <Pagination itemCount={data.count} pageSize={data.page_size} label="cards" top={header} />
-        </div>
+        </Col>
     );
 
-    //  row-cols-lg-2
+    return (
+        <Row className="g-3">
+            {data.count === 0 ? (
+                <Col xs={12}>
+                    <div className="text-center">
+                        <h3>No results found.</h3>
+                    </div>
+                </Col>
+            ) : (
+                <>
+                    <PaginationThing header />
+                    {data.results.map((card) => (
+                        <Col xs={12}>
+                            <CardInfo card={card} link />
+                        </Col>
+                    ))}
+                    <PaginationThing />
+                </>
+            )}
+        </Row>
+    );
+
+    /*
     return data.count === 0 ? (
         <Row>
             <Col className="p-2">
@@ -63,6 +85,7 @@ const CardLayout = ({ data }: { data: CardResults }) => {
             <PaginationThing />
         </>
     );
+     */
 };
 
 export default CardList;
@@ -80,16 +103,22 @@ export const CardListSidebar = ({ header, query, home, infoCol, sidebarCol }: Ca
         <>
             {header}
 
-            <div className="py-2">
+            <div className="py-3">
                 <Container>
-                    <Row>
+                    <Row className="g-3">
                         <Col xs={12} lg={8}>
-                            {infoCol}
-                            <CardList query={query} home={home} key={`${Date.now()}`} />
+                            <Row className="g-3">
+                                {infoCol}
+                                <Col xs={12}>
+                                    <CardList query={query} home={home} key={`${Date.now()}`} />
+                                </Col>
+                            </Row>
                         </Col>
                         <Col xs={4} className="d-none d-lg-block">
-                            {sidebarCol}
-                            <PopularCategoriesSidebar />
+                            <Row className="g-3">
+                                {sidebarCol}
+                                <PopularCategoriesSidebar />
+                            </Row>
                         </Col>
                     </Row>
                 </Container>

@@ -65,12 +65,9 @@ const LoginDropdown = () => {
     }
 
     const IconRow = ({ label, icon }: IconRowProps) => (
-        <Row>
-            <Col xs={3}>
-                <FaIcon icon={icon} />
-            </Col>
-            <Col xs={9}>{label}</Col>
-        </Row>
+        <>
+            <FaIcon icon={icon} className="me-2" /> {label}
+        </>
     );
 
     const UserItems = () => (
@@ -139,24 +136,30 @@ const TopNavBar = () => {
 
     const searchbar = (
         <SearchBar
-            label="Search"
+            label={<FaIcon icon={faSearch} />}
             apiCall={(query) => api.getTopThreeCards(query)}
             resultMapper={(result: BingoCard[], query: string) =>
                 result.length > 0
                     ? [
                           ...result.map((card) => (
-                              <Dropdown.Item as={Link} to={`/cards/${card.id}/`}>
-                                  <FaIcon icon={faTh} /> <FaIcon icon={faPencilAlt} /> {card.name}
+                              <Dropdown.Item as={Link} to={`/cards/${card.id}/`} className="mb-2">
+                                  <small>
+                                      <FaIcon icon={faTh} /> <FaIcon icon={faPencilAlt} className="me-2" /> {card.name}
+                                  </small>
                               </Dropdown.Item>
                           )),
 
                           <Dropdown.Item as={Link} to={`/search/?q=${query}`}>
-                              <FaIcon icon={faSearch} /> Search bingo cards for "{query}"
+                              <small>
+                                  <FaIcon icon={faSearch} className="me-2" /> Search bingo cards for "{query}"
+                              </small>
                           </Dropdown.Item>,
                       ]
                     : [
                           <Dropdown.Item className="slight-bg" disabled>
-                              No results found
+                              <small>
+                                  <FaIcon icon={faTimes} className="me-2" /> No results for "{query}"
+                              </small>
                           </Dropdown.Item>,
                       ]
             }
@@ -255,7 +258,7 @@ const App = () => {
                 {/* CONTAINER ROUTES */}
                 {Object.entries(containerRoutes).map(([url, View]) => (
                     <Route exact path={url}>
-                        <div className="py-2">
+                        <div className="py-3">
                             <Container>
                                 <View />
                             </Container>

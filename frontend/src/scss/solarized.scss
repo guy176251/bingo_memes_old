@@ -112,6 +112,10 @@ a:active {
     color: var(--red);
 }
 
+.text-slight-bg {
+    color: var(--base3);
+}
+
 .bg-sdark-orange {
     background-color: var(--orange);
 }
@@ -217,12 +221,19 @@ a:active {
 }
 */
 
+.input-group-text-clear {
+    color: var(--base00);
+    background-color: var(--base3);
+    border: 1px solid var(--base3);
+}
+
 .dropdown-menu a.dropdown-item {
     white-space: normal;
     color: var(--base00);
 }
 
 .vote-btn:hover {
+    //color: white;
     background-color: var(--base01);
 }
 
@@ -244,4 +255,15 @@ a:active {
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center center;
+}
+
+.rotate-on-focus:focus {
+    -webkit-transform: rotate(180deg);
+    -ms-transform: rotate(180deg);
+    transform: rotate(180deg);
+}
+
+.tile-indicator {
+    color: white;
+    background-color: var(--base01);
 }
