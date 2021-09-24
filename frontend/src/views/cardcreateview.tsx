@@ -1,27 +1,23 @@
-import { createContext, useContext, forwardRef, useState, useRef, useReducer } from "react";
+import React, { createContext, useContext, forwardRef, useState, useRef, useReducer } from "react";
 import { useHistory, useParams } from "react-router-dom";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Dropdown from "react-bootstrap/Dropdown";
 import InputGroup from "react-bootstrap/InputGroup";
+import FormControl from "react-bootstrap/FormControl";
 import Button from "react-bootstrap/Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import { FieldProps, FormikHelpers, Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 
-import { edgePadding } from "../components/helpers";
 import { Header } from "../components/snippets";
 import Loading from "../components/loading";
-import { BingoCard, SearchResults, Category } from "../types";
+import { BingoCard, Category, CardSchema, ObjectArray } from "../types";
 import api from "../api/backend";
 import ApiRender from "../api/render";
 import debugLog from "../debug";
-
-//const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
-//const interleave = (arr: any, thing: any) => [].concat(...arr.map((n: any) => [n, thing])).slice(0, -1);
-
-const DropdownContainer = forwardRef(({ children }: any, ref: any) => <div ref={ref}>{children}</div>);
+import { useCardSchema, tileFieldNames } from "../components/cardschema";
 
 interface FormHelperProps {
     setFieldValue: (field: string, value: any, shouldValidate?: boolean | undefined) => void;
@@ -29,6 +25,8 @@ interface FormHelperProps {
     card?: BingoCard;
     category?: Category;
     isSubmitting?: boolean;
+    dirty?: boolean;
+    cardSchema?: Yup.SchemaOf<CardSchema>;
 }
 
 const FormHelperContext = createContext<FormHelperProps>({
@@ -105,8 +103,8 @@ const CategorySearchBar = () => {
                     loading: false,
                     categories: action.payload,
                 };
-            case "menuSelect":
-                let categoryValue = action.payload.errors.length > 0 ? "" : action.payload.query;
+            case "menuSelect": {
+                const categoryValue = action.payload.errors.length > 0 ? "" : action.payload.query;
                 setFieldValue("category", categoryValue);
                 return {
                     ...state,
@@ -114,6 +112,7 @@ const CategorySearchBar = () => {
                     query: action.payload.query,
                     errors: action.payload.errors,
                 };
+            }
             case "load":
                 return {
                     ...state,
@@ -123,7 +122,7 @@ const CategorySearchBar = () => {
         }
     };
 
-    const { setFieldValue, values, card, category } = useContext(FormHelperContext);
+    const { setFieldValue, values, card, category, cardSchema } = useContext(FormHelperContext);
     const categoryName: string = values.category;
     const initState: State = {
         query: categoryName,
@@ -153,7 +152,7 @@ const CategorySearchBar = () => {
 
     const getCategories = async () => {
         dispatch({ type: "load", payload: true });
-        let { data, ok } = await api.getTopThreeCategories(query);
+        const { data, ok } = await api.getTopThreeCategories(query);
         if (ok && data) {
             debugLog(data);
             dispatch({ type: "category", payload: data });
@@ -170,7 +169,7 @@ const CategorySearchBar = () => {
                 break;
             case "QUERY!":
                 try {
-                    categorySchema.validateSync(query);
+                    cardSchema?.validateSync({ category: query });
                 } catch (err) {
                     errs = err.errors;
                 }
@@ -191,15 +190,13 @@ const CategorySearchBar = () => {
     const LoadingIndicator = () => (
         <>
             {loading && (
-                <div className="input-group-append">
-                    <span className="input-group-text">
-                        <div className="ps-2">
-                            <div className="spinner-border spinner-border-sm" role="status">
-                                <span className="sr-only">Loading...</span>
-                            </div>
+                <InputGroup.Text>
+                    <div className="ps-2">
+                        <div className="spinner-border spinner-border-sm" role="status">
+                            <span className="sr-only">Loading...</span>
                         </div>
-                    </span>
-                </div>
+                    </div>
+                </InputGroup.Text>
             )}
         </>
     );
@@ -207,15 +204,9 @@ const CategorySearchBar = () => {
     const ClearButton = () => (
         <>
             {!showQueryButton && query.length > 0 && (
-                <div
-                    className="input-group-append"
-                    style={{ cursor: "pointer" }}
-                    onClick={() => dispatch({ type: "query", payload: "" })}
-                >
-                    <span className="input-group-text clear">
-                        <FontAwesomeIcon icon={faTimes} />
-                    </span>
-                </div>
+                <InputGroup.Text style={{ cursor: "pointer" }} onClick={() => dispatch({ type: "query", payload: "" })}>
+                    <FontAwesomeIcon icon={faTimes} />
+                </InputGroup.Text>
             )}
         </>
     );
@@ -223,32 +214,28 @@ const CategorySearchBar = () => {
     const QueryButton = () => (
         <>
             {showQueryButton && (
-                <div className="input-group-append">
-                    <span className="input-group-text clear p-1">
-                        <div className="p-2 rounded text-white bg-sdark-violet align-items-center justify-content-center">
-                            <Row>
-                                <Col className={card || category ? "" : "pe-2"}>{query}</Col>
-                                {!card && !category && (
-                                    <Col className="ps-2">
-                                        <div
-                                            style={{ cursor: "pointer" }}
-                                            onClick={() =>
-                                                dispatch({
-                                                    type: "menuSelect",
-                                                    payload: { query: "", errors: [] },
-                                                })
-                                            }
-                                        >
-                                            <small>
-                                                <FontAwesomeIcon icon={faTimes} />
-                                            </small>
-                                        </div>
-                                    </Col>
-                                )}
-                            </Row>
-                        </div>
-                    </span>
-                </div>
+                <InputGroup.Text className="m-1 text-white bg-sdark-violet border-0 rounded">
+                    <Row>
+                        <Col className={card || category ? "" : "pe-2"}>{query}</Col>
+                        {!card && !category && (
+                            <Col className="ps-2">
+                                <div
+                                    style={{ cursor: "pointer" }}
+                                    onClick={() =>
+                                        dispatch({
+                                            type: "menuSelect",
+                                            payload: { query: "", errors: [] },
+                                        })
+                                    }
+                                >
+                                    <small>
+                                        <FontAwesomeIcon icon={faTimes} />
+                                    </small>
+                                </div>
+                            </Col>
+                        )}
+                    </Row>
+                </InputGroup.Text>
             )}
         </>
     );
@@ -285,15 +272,11 @@ const CategorySearchBar = () => {
         </>
     );
 
-    //const SuccessIndicator = () => (
-    //    <span className={`input-group-text ${disabled ? (valid ? "success" : "error") : ""}`}>Category</span>
-    //);
-
-    const SuccessIndicator = () => <InputGroup.Text>Category</InputGroup.Text>;
-
     // ============================================================================
     // ========================= 3. Main Element ==================================
     // ============================================================================
+
+    const DropdownContainer = forwardRef(({ children }: any, ref: any) => <div ref={ref}>{children}</div>);
 
     return (
         <Dropdown
@@ -301,7 +284,7 @@ const CategorySearchBar = () => {
             onToggle={() => dispatch({ type: "dropdown", payload: !showDropdown })}
             onSelect={handleSelect}
         >
-            <div className="input-group slight-bg rounded">
+            <InputGroup className="slight-bg rounded">
                 <InputGroup.Text className={disabled ? (valid ? "success" : "error") : ""}>Category</InputGroup.Text>
                 <QueryButton />
                 <input
@@ -314,7 +297,7 @@ const CategorySearchBar = () => {
                 />
                 <ClearButton />
                 <LoadingIndicator />
-            </div>
+            </InputGroup>
 
             <div>
                 <CategoryErrors />
@@ -357,18 +340,10 @@ const FormRow = ({ name, label, disabled }: FormRowProps) => (
 
             return (
                 <>
-                    <div className="input-group">
-                        <div className="input-group-prepend">
-                            <span className={`input-group-text ${prependColor}`}>{label}</span>
-                        </div>
-                        <input
-                            {...field}
-                            type="text"
-                            className="form-control"
-                            placeholder="Empty"
-                            disabled={disabled}
-                        />
-                    </div>
+                    <InputGroup>
+                        <InputGroup.Text className={prependColor}>{label}</InputGroup.Text>
+                        <FormControl {...field} type="text" placeholder="Empty" disabled={disabled} />
+                    </InputGroup>
                     {meta.touched && meta.error && (
                         <div className="text-sdark-red">
                             <small>{meta.error}</small>
@@ -385,59 +360,6 @@ const preventEnter = (keyEvent: React.KeyboardEvent<HTMLFormElement>) => {
     }
 };
 
-const CardFormm = () => {
-    const { card, category, isSubmitting } = useContext(FormHelperContext);
-    const headerText = card
-        ? `Editing "${card.name}"`
-        : `Create New Bingo Card ${category ? `In ${category.name}` : ""}`;
-
-    return (
-        <Form onKeyDown={preventEnter}>
-            <Header card>
-                <h2>{headerText}</h2>
-            </Header>
-            <Row>
-                <Col xs={12} lg={5}>
-                    <div className="p-2">
-                        <Col className="pb-2 px-0">
-                            <Row className="pb-2 px-0">
-                                <FormRow name="name" label="Name" disabled={Boolean(card)} />
-                            </Row>
-                            <Row>
-                                <Col className="w-100 px-0">
-                                    <CategorySearchBar />
-                                </Col>
-                            </Row>
-                        </Col>
-                        <Row className="row-cols-5 pt-2">
-                            {tileFieldNames.map((field, index) => (
-                                <div className={edgePadding[index]}>
-                                    <FormRowIndicator name={field} label={`${index + 1}`} />
-                                </div>
-                            ))}
-                        </Row>
-                    </div>
-                </Col>
-
-                <Col xs={12} lg={7} className="p-0">
-                    <div className="p-2">
-                        {tileFieldNames.map((field, index) => (
-                            <div className={index !== 24 ? "pb-2" : ""}>
-                                <FormRow name={field} label={`Tile ${index + 1}`} />
-                            </div>
-                        ))}
-                    </div>
-                </Col>
-
-                <Col xs={12}></Col>
-            </Row>
-            <button className="btn btn-primary" type="submit" disabled={isSubmitting}>
-                Submit
-            </button>
-        </Form>
-    );
-};
-
 const CardForm = () => {
     const { card, category, isSubmitting } = useContext(FormHelperContext);
     const headerText = card
@@ -446,11 +368,18 @@ const CardForm = () => {
 
     return (
         <Form onKeyDown={preventEnter}>
-            <Header card>
-                <h2>{headerText}</h2>
-            </Header>
-
-            <Row className="g-3">
+            <Row className="g-3 justify-content-center">
+                <Col xs={12}>
+                    <Row className="g-3">
+                        <Col id="form-header-spacer" xs={2} className="d-none d-lg-block"></Col>
+                        <Col xs={12} lg={8}>
+                            <div className="rounded p-4 sdark-fg text-center">
+                                <h2 className="m-0">{headerText}</h2>
+                            </div>
+                        </Col>
+                        <Col id="form-header-spacer" xs={2} className="d-none d-lg-block"></Col>
+                    </Row>
+                </Col>
                 <Col xs={12} lg={5}>
                     <Row className="g-3">
                         <Col xs={12}>
@@ -469,7 +398,7 @@ const CardForm = () => {
                             </Row>
                         </Col>
                         <Col xs={12}>
-                            <Button variant="primary" type="submit" disabled={isSubmitting}>
+                            <Button variant="primary" type="submit" disabled={isSubmitting} className="text-white">
                                 Submit
                             </Button>
                         </Col>
@@ -489,86 +418,14 @@ const CardForm = () => {
     );
 };
 
-/*
-const formFields = [...tileFields, "name", "category"];
-
-const cardSchemaShape = Object.fromEntries(
-    ([] as any[]).concat(
-        tileFields.map((field) => [field, stringField(200)]),
-        Object.entries({
-            name: stringField(50),
-            category: categorySchema,
-        })
-    )
-);
-
-const cardSchema = Yup.object().shape(cardSchemaShape);
-*/
-
-const tileFieldNames = Array(25)
-    .fill(null)
-    .map((_, index) => `tile_${index + 1}`);
-
-const stringField = (max: number) =>
-    Yup.string().default("").required("Cannot be blank.").max(max, `Cannot be longer than ${max} characters.`);
-
-const categorySchema = stringField(20).matches(/^\w+$/, {
-    message: "Can only contain letters, numbers and underscores.",
-    excludeEmptyString: true,
-});
-
-type ObjectArray<T = any> = { [s: string]: T };
-
 const CardCreateEditLayout = ({ card, category }: { card?: BingoCard; category?: Category }) => {
     const [success, setSuccess] = useState(false);
     const history = useHistory();
+    const { cardSchema, valuesToAPI } = useCardSchema(card, category);
 
-    // create placeholder tile objects if form is in "create mode"
-    const tiles = card
-        ? card.tiles
-        : Array(25)
-              .fill(0)
-              .map((_, index) => ({ id: index, text: "" }));
-
-    // map tile field name to tile objects
-    const tileMapping = Object.fromEntries(tiles.map((tile, index) => [tileFieldNames[index], tile]));
-
-    // create tile fields with field names in tileMapping
-    const tileFields = Object.fromEntries(Object.entries(tileMapping).map(([label, _]) => [label, stringField(200)]));
-
-    const cardSchema = Yup.object().shape({
-        ...tileFields,
-        name: stringField(50),
-        category: categorySchema,
-    });
-
-    const defaultValues = card
-        ? {
-              ...Object.fromEntries(Object.entries(tileMapping).map(([label, tile]) => [label, tile.text])),
-              name: card.name,
-              category: card.category.name,
-          }
-        : cardSchema.getDefault();
-
-    if (category) defaultValues.category = category.name;
-
-    debugLog(defaultValues);
-
-    const submitCard = async (values: any, { setErrors, resetForm }: FormikHelpers<any>) => {
-        // map field name to form value
-        let tileValues = Object.entries(tileMapping).map(([label, _]) => [label, (values as ObjectArray)[label]]);
-
-        let formValues: any = {
-            // get previously defined tiles and create new tile list with form values
-            tiles: tileValues.map(([label, text]) => ({ ...(tileMapping as ObjectArray)[label], text })),
-            name: values.name,
-            category: { name: values.category },
-        };
-        formValues.tiles.forEach((tile: any) => debugLog(tile));
-
+    const submitCard = async (values: CardSchema, { setErrors, resetForm }: FormikHelpers<any>) => {
         let apiCall = card ? (v: any) => api.editCard(card.id, v) : (v: any) => api.createCard(v);
-
-        let { data, ok } = await apiCall(formValues);
+        let { data, ok } = await apiCall(valuesToAPI(values));
 
         if (!ok && data) {
             setErrors(
@@ -578,7 +435,7 @@ const CardCreateEditLayout = ({ card, category }: { card?: BingoCard; category?:
             resetForm();
         }
 
-        debugLog({ CARDCREATE: "submitted card", data, ok });
+        //debugLog({ CARDCREATE: "submitted card", data, ok });
         setSuccess(ok);
         return;
     };
@@ -597,9 +454,11 @@ const CardCreateEditLayout = ({ card, category }: { card?: BingoCard; category?:
         </Header>
     ) : (
         <div className="px-2">
-            <Formik validationSchema={cardSchema} initialValues={defaultValues} onSubmit={submitCard}>
-                {({ isSubmitting, setFieldValue, values }) => (
-                    <FormHelperContext.Provider value={{ setFieldValue, values, card, category, isSubmitting }}>
+            <Formik validationSchema={cardSchema} initialValues={cardSchema.getDefault() as any} onSubmit={submitCard}>
+                {({ isSubmitting, setFieldValue, values, dirty }) => (
+                    <FormHelperContext.Provider
+                        value={{ cardSchema, setFieldValue, values, card, category, isSubmitting, dirty }}
+                    >
                         {isSubmitting ? <Loading message={`${formVerbCap}ing new bingo card...`} /> : <CardForm />}
                     </FormHelperContext.Provider>
                 )}
@@ -615,6 +474,7 @@ interface CardCreateParams {
 
 const CardCreateView = () => {
     const { cardId, categoryName } = useParams<CardCreateParams>();
+    debugLog({ CARDCREATE: "init", cardId, categoryName });
 
     return cardId ? (
         <ApiRender

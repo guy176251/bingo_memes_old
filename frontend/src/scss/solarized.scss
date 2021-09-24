@@ -193,20 +193,6 @@ a:active {
     border: 1px solid var(--base3);
 }
 
-.input-group > .input-group-append > .input-group-text.success,
-.input-group > .input-group-prepend > .input-group-text.success {
-    color: var(--base3);
-    background-color: var(--green);
-    border-color: var(--green);
-}
-
-.input-group > .input-group-prepend > .input-group-text.error,
-.input-group > .input-group-append > .input-group-text.error {
-    color: var(--base3);
-    background-color: var(--red);
-    border-color: var(--red);
-}
-
 .input-group > .input-group-prepend > .input-group-text.disabled,
 .input-group > .input-group-append > .input-group-text.disabled {
     color: var(--base3);
@@ -220,6 +206,18 @@ a:active {
     border-color: var(--violet);
 }
 */
+
+.input-group-text.success {
+    color: var(--base3);
+    background-color: var(--green);
+    border-color: var(--green);
+}
+
+.input-group-text.error {
+    color: var(--base3);
+    background-color: var(--red);
+    border-color: var(--red);
+}
 
 .input-group-text-clear {
     color: var(--base00);

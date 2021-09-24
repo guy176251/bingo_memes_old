@@ -9,17 +9,17 @@ from subprocess import run
 
 
 def main():
-    virtualenv_path = os.environ.get('VIRTUAL_ENV')
+    virtualenv_path = os.environ.get("VIRTUAL_ENV")
 
     if not virtualenv_path:
-        print('Need to run script in virtualenv.')
+        print("Need to run script in virtualenv.")
         return
-   
+
     usr = os.getlogin()
     proj_dir = Path(__file__).absolute().parent.parent
-    gunicorn_bin = Path(virtualenv_path) / 'bin' / 'gunicorn'
+    gunicorn_bin = Path(virtualenv_path) / "bin" / "gunicorn"
 
-    socket_file = '''
+    socket_file = """
 
 [Unit]
 Description=gunicorn socket
@@ -30,9 +30,9 @@ ListenStream=/run/gunicorn.sock
 [Install]
 WantedBy=sockets.target
 
-'''
+"""
 
-    service_file = f'''
+    service_file = f"""
 
 [Unit]
 Description=gunicorn daemon
@@ -52,21 +52,25 @@ ExecStart={gunicorn_bin} \\
 [Install]
 WantedBy=multi-user.target
 
-'''
+"""
 
-    for name, contents in {'gunicorn.socket': socket_file,
-                           'gunicorn.service': service_file}.items():
+    for name, contents in {
+        "gunicorn.socket": socket_file,
+        "gunicorn.service": service_file,
+    }.items():
 
-        with open(name, 'w') as f:
+        with open(name, "w") as f:
             f.write(contents)
 
-    run('sudo mv gunicorn.* /etc/systemd/system/', shell=True)
-    
-    for cmd in ['sudo systemctl start gunicorn.socket',
-                'sudo systemctl enable gunicorn.socket']:
+    run("sudo mv gunicorn.* /etc/systemd/system/", shell=True)
+
+    for cmd in [
+        "sudo systemctl start gunicorn.socket",
+        "sudo systemctl enable gunicorn.socket",
+    ]:
 
         run(cmd, shell=True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

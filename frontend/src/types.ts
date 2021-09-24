@@ -46,33 +46,6 @@ export interface BingoCard {
     upvoted: boolean | null;
     category: Category;
     hashtags: Hashtag[];
-    /*
-  tile_1: string;
-  tile_2: string;
-  tile_3: string;
-  tile_4: string;
-  tile_5: string;
-  tile_6: string;
-  tile_7: string;
-  tile_8: string;
-  tile_9: string;
-  tile_10: string;
-  tile_11: string;
-  tile_12: string;
-  tile_13: string;
-  tile_14: string;
-  tile_15: string;
-  tile_16: string;
-  tile_17: string;
-  tile_18: string;
-  tile_19: string;
-  tile_20: string;
-  tile_21: string;
-  tile_22: string;
-  tile_23: string;
-  tile_24: string;
-  tile_25: string;
-  */
 }
 
 export type CardState = BingoCard | null;
@@ -82,3 +55,38 @@ export interface SearchResults<T = any> {
     page_size: number;
     results: T[];
 }
+
+export interface TileSchema<T = any> {
+    tile_1: T;
+    tile_2: T;
+    tile_3: T;
+    tile_4: T;
+    tile_5: T;
+    tile_6: T;
+    tile_7: T;
+    tile_8: T;
+    tile_9: T;
+    tile_10: T;
+    tile_11: T;
+    tile_12: T;
+    tile_13: T;
+    tile_14: T;
+    tile_15: T;
+    tile_16: T;
+    tile_17: T;
+    tile_18: T;
+    tile_19: T;
+    tile_20: T;
+    tile_21: T;
+    tile_22: T;
+    tile_23: T;
+    tile_24: T;
+    tile_25: T;
+}
+
+export interface CardSchema<T = any> extends TileSchema<T> {
+    name: string;
+    category: string;
+}
+
+export type ObjectArray<T = any> = { [s: string]: T };

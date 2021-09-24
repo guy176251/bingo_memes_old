@@ -34,7 +34,7 @@ import CardView from "./views/cardview";
 import LoginView from "./views/loginview";
 import SignupView from "./views/signupview";
 import SearchView from "./views/searchview";
-import CardCreateView from "./views/cardcreateview";
+import CardCreateViewkjahsdk from "./views/cardcreateview";
 import api from "./api/backend";
 //import { UserAuthContext, LogoutContext } from "./context";
 import { BingoCard } from "./types";
@@ -229,8 +229,8 @@ const TopNavBar = () => {
 
 const App = () => {
     const containerRoutes: { [s: string]: React.FC } = {
-        "/categories/:categoryName/create/": CardCreateView,
-        "/cards/:cardId/edit/": CardCreateView,
+        "/categories/:categoryName/create/": CardCreateViewkjahsdk,
+        "/cards/:cardId/edit/": CardCreateViewkjahsdk,
         "/signup/": SignupView,
         "/login/": LoginView,
         "/cards/:cardId/": CardView,

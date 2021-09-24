@@ -6,10 +6,10 @@ import requests
 from subprocess import run
 from db_name import STATICFILES_DIRS, STATIC_URL, APP_NAME
 
-resp = requests.get('https://api.ipify.org?format=json')
-ip = resp.json()['ip']
+resp = requests.get("https://api.ipify.org?format=json")
+ip = resp.json()["ip"]
 
-server_conf = f'''
+server_conf = f"""
 
 server {{
     listen 80;
@@ -26,19 +26,22 @@ server {{
     }}
 }}
 
-'''
+"""
 
-conf_filename = f'{APP_NAME}.conf'
+conf_filename = f"{APP_NAME}.conf"
 
-with open(conf_filename, 'w') as f:
+with open(conf_filename, "w") as f:
     f.write(server_conf)
 
-run(f'sudo rm /etc/nginx/sites-available/default', shell=True)
-run(f'sudo mv {conf_filename} /etc/nginx/sites-available/', shell=True)
-run(f'sudo ln -s /etc/nginx/sites-available/{conf_filename} /etc/nginx/sites-enabled', shell=True)
-result = run('sudo nginx -t', shell=True, capture_output=True)
+run(f"sudo rm /etc/nginx/sites-available/default", shell=True)
+run(f"sudo mv {conf_filename} /etc/nginx/sites-available/", shell=True)
+run(
+    f"sudo ln -s /etc/nginx/sites-available/{conf_filename} /etc/nginx/sites-enabled",
+    shell=True,
+)
+result = run("sudo nginx -t", shell=True, capture_output=True)
 
 if result.stderr:
     print(result.stderr)
 
-run('sudo systemctl restart nginx', shell=True)
+run("sudo systemctl restart nginx", shell=True)
