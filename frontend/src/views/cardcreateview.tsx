@@ -1,23 +1,22 @@
-import React, { createContext, useContext, forwardRef, useState, useRef, useReducer } from "react";
-import { useHistory, useParams } from "react-router-dom";
-import Row from "react-bootstrap/Row";
+import { faTimes } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Field, FieldProps, Form, Formik, FormikHelpers } from "formik";
+import React, { createContext, forwardRef, useContext, useReducer, useRef, useState } from "react";
+import Button from "react-bootstrap/Button";
 import Col from "react-bootstrap/Col";
 import Dropdown from "react-bootstrap/Dropdown";
-import InputGroup from "react-bootstrap/InputGroup";
 import FormControl from "react-bootstrap/FormControl";
-import Button from "react-bootstrap/Button";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTimes } from "@fortawesome/free-solid-svg-icons";
-import { FieldProps, FormikHelpers, Formik, Form, Field } from "formik";
+import InputGroup from "react-bootstrap/InputGroup";
+import Row from "react-bootstrap/Row";
+import { useHistory, useParams } from "react-router-dom";
 import * as Yup from "yup";
-
-import { Header } from "../components/snippets";
-import Loading from "../components/loading";
-import { BingoCard, Category, CardSchema, ObjectArray } from "../types";
 import api from "../api/backend";
 import ApiRender from "../api/render";
+import { tileFieldNames, useCardSchema } from "../components/cardschema";
+import Loading from "../components/loading";
+import { Header } from "../components/snippets";
 import debugLog from "../debug";
-import { useCardSchema, tileFieldNames } from "../components/cardschema";
+import { BingoCard, CardSchema, Category, ObjectArray } from "../types";
 
 interface FormHelperProps {
     setFieldValue: (field: string, value: any, shouldValidate?: boolean | undefined) => void;
@@ -170,7 +169,7 @@ const CategorySearchBar = () => {
             case "QUERY!":
                 try {
                     cardSchema?.validateSync({ category: query });
-                } catch (err) {
+                } catch (err: any) {
                     errs = err.errors;
                 }
                 dispatch({ type: "menuSelect", payload: { query, errors: errs } });

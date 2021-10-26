@@ -1,49 +1,40 @@
-import { useState } from "react";
-import ReactDOM from "react-dom";
-
-import "bootstrap/dist/css/bootstrap.min.css";
-import Container from "react-bootstrap/Container";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
-import Nav from "react-bootstrap/Nav";
-import Navbar from "react-bootstrap/Navbar";
-import Dropdown from "react-bootstrap/Dropdown";
-
-import { Link, BrowserRouter as Router, Switch, Route } from "react-router-dom";
-
-import { FontAwesomeIcon as FaIcon } from "@fortawesome/react-fontawesome";
 import {
-    IconDefinition,
-    faSignOutAlt,
-    faSignInAlt,
-    faPencilAlt,
-    faTh,
     //faPen,
     faCog,
-    faUserCircle,
-    faTimes,
+    faPencilAlt,
     faSearch,
+    faSignInAlt,
+    faSignOutAlt,
+    faTh,
+    faTimes,
     faUser,
+    faUserCircle,
+    IconDefinition,
 } from "@fortawesome/free-solid-svg-icons";
-
-//import HomeView from "./views/homeview";
-import HomePageView from "./views/homepageview";
-import CategoryView from "./views/categoryview";
-import UserView from "./views/userview";
-import CardView from "./views/cardview";
-import LoginView from "./views/loginview";
-import SignupView from "./views/signupview";
-import SearchView from "./views/searchview";
-import CardCreateViewkjahsdk from "./views/cardcreateview";
+import { FontAwesomeIcon as FaIcon } from "@fortawesome/react-fontawesome";
+import "bootstrap/dist/css/bootstrap.min.css";
+import { useState } from "react";
+import Col from "react-bootstrap/Col";
+import Container from "react-bootstrap/Container";
+import Dropdown from "react-bootstrap/Dropdown";
+import Nav from "react-bootstrap/Nav";
+import Navbar from "react-bootstrap/Navbar";
+import ReactDOM from "react-dom";
+import { BrowserRouter as Router, Link, Route, Switch } from "react-router-dom";
 import api from "./api/backend";
-//import { UserAuthContext, LogoutContext } from "./context";
-import { BingoCard } from "./types";
+import { ProvideAuth, useAuth } from "./auth";
 import SearchBar from "./components/searchbar";
-import { useAuth, ProvideAuth } from "./auth";
-//import Sidebar from "./components/sidebar";
-
 import "./scss/main.scss";
 import "./scss/sidebar.scss";
+import { BingoCard } from "./types";
+import CardCreateViewkjahsdk from "./views/cardcreateview";
+import CardView from "./views/cardview";
+import CategoryView from "./views/categoryview";
+import HomePageView from "./views/homepageview";
+import LoginView from "./views/loginview";
+import SearchView from "./views/searchview";
+import SignupView from "./views/signupview";
+import UserView from "./views/userview";
 
 const DropdownContainer = ({ children }: any, ref: any) => <div ref={ref}>{children}</div>;
 
